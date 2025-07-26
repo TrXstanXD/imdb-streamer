@@ -85,20 +85,21 @@
   const resultsDiv = document.getElementById("results");
 
   const featuredIDs = [
-    "tt21032864", // Deadpool & Wolverine
-    "tt20917338", // Inside Out 2
-    "tt14849194", // Despicable Me 4
-    "tt17009710"  // A Quiet Place: Day One
+    "tt6263850",   // Deadpool & Wolverine (2024)
+    "tt20917338",  // Inside Out 2 (2024)
+    "tt14849194",  // Despicable Me 4 (2024)
+    "tt2560092",   // Twisters (2024)
+    "tt15398776"   // Longlegs (2024)
   ];
 
-  let debounceTimeout;
+  let trendingHeader;
 
-  // Handle search input
   searchInput.addEventListener("input", () => {
     clearTimeout(debounceTimeout);
     debounceTimeout = setTimeout(() => {
       const query = searchInput.value.trim();
       if (query) {
+        clearTrendingTitle();
         fetchResults(query);
       } else {
         showFeatured();
@@ -106,8 +107,38 @@
     }, 500);
   });
 
-  // Show featured on load
   document.addEventListener("DOMContentLoaded", showFeatured);
+
+  function addTrendingTitle() {
+    if (!trendingHeader) {
+      trendingHeader = document.createElement("h2");
+      trendingHeader.textContent = "🔥 Trending Movies";
+      trendingHeader.style.textAlign = "left";
+      trendingHeader.style.margin = "30px auto 10px";
+      trendingHeader.style.maxWidth = "600px";
+      resultsDiv.insertAdjacentElement("beforebegin", trendingHeader);
+    }
+  }
+
+  function clearTrendingTitle() {
+    if (trendingHeader) {
+      trendingHeader.remove();
+      trendingHeader = null;
+    }
+  }
+
+  async function showFeatured() {
+    resultsDiv.innerHTML = "";
+    clearTrendingTitle();
+    addTrendingTitle();
+    for (const id of featuredIDs) {
+      const res = await fetch(`https://www.omdbapi.com/?apikey=${apiKey}&i=${id}`);
+      const data = await res.json();
+      if (data.Response === "True") {
+        renderResult(data);
+      }
+    }
+  }
 
   async function fetchResults(query) {
     resultsDiv.innerHTML = "";
@@ -124,17 +155,6 @@
       const fullData = await resDetail.json();
       if (fullData.Response === "True") {
         renderResult(fullData);
-      }
-    }
-  }
-
-  async function showFeatured() {
-    resultsDiv.innerHTML = "";
-    for (const id of featuredIDs) {
-      const res = await fetch(`https://www.omdbapi.com/?apikey=${apiKey}&i=${id}`);
-      const data = await res.json();
-      if (data.Response === "True") {
-        renderResult(data);
       }
     }
   }
@@ -164,6 +184,8 @@
     container.appendChild(info);
     resultsDiv.appendChild(container);
   }
+
+  let debounceTimeout;
 </script>
 </body>
 </html>
