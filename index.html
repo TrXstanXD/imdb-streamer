@@ -4,7 +4,8 @@
   <!-- iOS App Mode -->
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Your App Name">
+<meta name="apple-mobile-web-app-title" content="IMDB Streamer">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="apple-touch-icon" href="icon.png"> <!-- Use a 180x180 image -->
   <meta charset="UTF-8">
   <title>IMDB Stream Search</title>
@@ -125,6 +126,27 @@
       margin-left: 4px;
       cursor: pointer;
     }
+    img {
+  max-width: 100%;
+  height: auto;
+}
+.container {
+  width: 100%;
+  padding: 20px;
+  box-sizing: border-box;
+}
+@media (max-width: 600px) {
+  h1 {
+    font-size: 20px;
+  }
+  .container {
+    padding: 10px;
+  }
+  .watch-btn, select {
+    width: 100%;
+    font-size: 16px;
+  }
+}
   </style>
 </head>
 <body>
