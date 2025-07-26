@@ -154,7 +154,7 @@
     z-index: 10001;
     transition: right 0.3s ease;
     box-shadow: none;
-    padding: 20px 16px; /* ✅ adds breathing room inside the watchlist */
+    padding: 20px 16px;
     box-sizing: border-box;
     overflow-y: auto;
   }
@@ -174,14 +174,9 @@
     font-size: 16px;
   }
 
-  #disclaimer {
-    top: 60px; /* ✅ pushes it down below toggle button */
-    left: 10px;
-    font-size: 12px;
-    padding: 6px 12px;
-    max-width: 90vw;
-    white-space: normal;
-    box-sizing: border-box;
+  #disclaimer,
+  footer {
+    display: none;
   }
 
   .result {
@@ -198,12 +193,6 @@
   input[type="text"] {
     width: 100%;
     max-width: 90vw;
-  }
-}
-@media (max-width: 768px) {
-  #disclaimer,
-  footer {
-    display: none;
   }
 }
 
