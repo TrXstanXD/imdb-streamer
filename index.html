@@ -289,7 +289,9 @@ ${item.watched ? "✅ Watched" : `<button onclick="markWatched('${id}')" class="
     info.className = "info";
 
     const title = document.createElement("h3");
-    title.textContent = `${data.Title} (${data.Year})`;
+const isWatched = watchlist[data.imdbID]?.watched;
+title.textContent = `${data.Title} (${data.Year})`;
+if (isWatched) title.style.color = "limegreen";
     info.appendChild(title);
 
     const viewBtn = document.createElement("a");
