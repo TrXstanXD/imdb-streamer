@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>IMDB Stream Search</title>
+  <style>
+    body {
+      background-color: #111;
+      color: #eee;
+      font-family: Arial, sans-serif;
+      padding: 40px;
+      text-align: center;
+    }
+    input[type="text"] {
+      width: 300px;
+      padding: 10px;
+      font-size: 16px;
+      border-radius: 6px;
+      border: none;
+      margin-bottom: 20px;
+    }
+    .result {
+      margin: 20px auto;
+      padding: 15px;
+      background-color: #222;
+      border-radius: 8px;
+      display: flex;
+      gap: 20px;
+      width: 600px;
+      text-align: left;
+      align-items: center;
+    }
+    .poster {
+      width: 100px;
+      border-radius: 5px;
+    }
+    .info {
+      flex: 1;
+    }
+    .info h3 {
+      margin: 0;
+      font-size: 20px;
+    }
+    .view-btn {
+      margin-top: 10px;
+      padding: 8px;
+      font-size: 14px;
+      border-radius: 6px;
+      border: none;
+      background-color: #007bff;
+      color: white;
+      text-decoration: none;
+      display: inline-block;
+    }
+    .view-btn:hover {
+      background-color: #0056b3;
+    }
+  </style>
+</head>
+<body>
+  <h1>🎬 IMDB Search to Stream</h1>
+  <input type="text" id="searchInput" placeholder="Search for a movie or show...">
+  <div id="results"></div>
+  <script>
+    const apiKey = "656d0795";
+    const searchInput = document.getElementById("searchInput");
+    const resultsDiv = document.getElementById("results");
+    let debounceTimeout;
+
+    searchInput.addEventListener("input", () => {
+      clearTimeout(debounceTimeout);
+      debounceTimeout = setTimeout(fetchResults, 500);
+    });
+
+    async function fetchResults() {
+      const query = searchInput.value.trim();
+      if (!query) return resultsDiv.innerHTML = "";
+
+      const res = await fetch(`https://www.omdbapi.com/?apikey=${apiKey}&s=${encodeURIComponent(query)}`);
+      const data = await res.json();
+
+      if (data.Response === "False") {
+        resultsDiv.innerHTML = `<p>No results found.</p>`;
+        return;
+      }
+
+      resultsDiv.innerHTML = "";
+      for (const item of data.Search) {
+        const id = item.imdbID;
+        const container = document.createElement("div");
+        container.className = "result";
+
+        const poster = document.createElement("img");
+        poster.className = "poster";
+        poster.src = item.Poster !== "N/A" ? item.Poster : "https://via.placeholder.com/100x150?text=No+Image";
+        container.appendChild(poster);
+
+        const info = document.createElement("div");
+        info.className = "info";
+
+        const title = document.createElement("h3");
+        title.textContent = `${item.Title} (${item.Year})`;
+        info.appendChild(title);
+
+        const viewBtn = document.createElement("a");
+        viewBtn.className = "view-btn";
+        viewBtn.href = `details.html?id=${id}`;
+        viewBtn.textContent = "View Details";
+        info.appendChild(viewBtn);
+
+        container.appendChild(info);
+        resultsDiv.appendChild(container);
+      }
+    }
+  </script>
+</body>
+</html>
