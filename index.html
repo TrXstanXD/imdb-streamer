@@ -30,6 +30,25 @@
       padding: 40px;
       flex: 3;
       text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    #watchListWrapper {
+      position: relative;
+      transition: transform 0.3s ease;
+    }
+    #watchListToggle {
+      position: absolute;
+      top: 20px;
+      left: -20px;
+      background: #444;
+      color: white;
+      padding: 5px 8px;
+      cursor: pointer;
+      border-radius: 4px 0 0 4px;
+      font-size: 18px;
+      z-index: 10000;
     }
     #watchList {
       background-color: #1a1a1a;
@@ -38,6 +57,7 @@
       width: 300px;
       flex-shrink: 0;
       overflow-y: auto;
+      height: 100vh;
     }
     input[type="text"] {
       width: 300px;
@@ -93,40 +113,35 @@
     <input type="text" id="searchInput" placeholder="Search for a movie or show...">
     <div id="results"></div>
   </div>
-  <div id="watchList">
-    <h2>Your Watch List</h2>
-    <ul id="watchListItems" style="list-style: none; padding: 0;"></ul>
+  <div id="watchListWrapper">
+    <div id="watchListToggle">◀</div>
+    <div id="watchList">
+      <h2>Your Watch List</h2>
+      <ul id="watchListItems" style="list-style: none; padding: 0;"></ul>
+    </div>
   </div>
- <script>
+
+<script>
   const apiKey = "656d0795";
   const searchInput = document.getElementById("searchInput");
   const resultsDiv = document.getElementById("results");
+  const watchList = document.getElementById("watchList");
+  const watchListWrapper = document.getElementById("watchListWrapper");
+  const watchListToggle = document.getElementById("watchListToggle");
+
+  let watchlistCollapsed = false;
+  watchListToggle.addEventListener("click", () => {
+    watchlistCollapsed = !watchlistCollapsed;
+    watchListWrapper.style.transform = watchlistCollapsed ? "translateX(100%)" : "translateX(0)";
+    watchListToggle.textContent = watchlistCollapsed ? "▶" : "◀";
+  });
 
   const featuredIDs = [
-    "tt6263850", // Deadpool & Wolverine
-    "tt22022452", // Inside Out 2
-    "tt7510222", // Despicable Me 4
-    "tt12584954", // Twisters
-    "tt23468450"  // Longlegs
+    "tt6263850", "tt22022452", "tt7510222", "tt12584954", "tt23468450"
   ];
 
   let debounceTimeout;
   let trendingHeader;
-
-  // Setup watchlist
-  const watchlistDiv = document.createElement("div");
-  watchlistDiv.style.position = "fixed";
-  watchlistDiv.style.top = "100px";
-  watchlistDiv.style.right = "20px";
-  watchlistDiv.style.width = "250px";
-  watchlistDiv.style.maxHeight = "80vh";
-  watchlistDiv.style.overflowY = "auto";
-  watchlistDiv.style.background = "#222";
-  watchlistDiv.style.padding = "10px";
-  watchlistDiv.style.borderRadius = "8px";
-  watchlistDiv.style.color = "white";
-  watchlistDiv.innerHTML = "<h3>🎞️ Watch List</h3>";
-  document.body.appendChild(watchlistDiv);
 
   const watchlist = JSON.parse(localStorage.getItem("watchlist") || "{}");
 
@@ -135,18 +150,18 @@
   }
 
   function updateWatchlistUI() {
-    watchlistDiv.innerHTML = "<h3>🎞️ Watch List</h3>";
+    const listEl = document.getElementById("watchListItems");
+    listEl.innerHTML = "";
     for (const id in watchlist) {
       const item = watchlist[id];
-      const entry = document.createElement("div");
-      entry.style.marginBottom = "10px";
+      const entry = document.createElement("li");
       entry.innerHTML = `
         <strong>${item.title}</strong><br>
-        <a href="details.html?id=${id}" class="view-btn" style="margin-top: 5px;">View</a>
-        ${item.watched ? "✅ Watched" : `<button onclick="markWatched('${id}')" style="margin-left: 5px;">Mark Watched</button>`}
-        <button onclick="removeFromWatchlist('${id}')" style="margin-top: 5px; background-color: #cc0000; color: white; border: none; border-radius: 4px; padding: 2px 6px;">Remove</button>
+        <a href="details.html?id=${id}" class="view-btn">View</a>
+        ${item.watched ? "✅ Watched" : `<button onclick="markWatched('${id}')">Mark Watched</button>`}
+        <button onclick="removeFromWatchlist('${id}')" style="background-color: #cc0000; color: white; border: none; border-radius: 4px; padding: 2px 6px;">Remove</button>
       `;
-      watchlistDiv.appendChild(entry);
+      listEl.appendChild(entry);
     }
   }
 
@@ -276,6 +291,5 @@
   window.markWatched = markWatched;
   window.removeFromWatchlist = removeFromWatchlist;
 </script>
-
 </body>
 </html>
