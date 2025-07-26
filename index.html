@@ -4,6 +4,21 @@
   <meta charset="UTF-8">
   <title>IMDB Stream Search</title>
   <style>
+    #disclaimer {
+  position: fixed;
+  top: 50%;
+  left: 0;
+  transform: rotate(-90deg) translate(-50%, -100%);
+  transform-origin: left top;
+  background-color: red;
+  color: white;
+  font-weight: bold;
+  padding: 6px 12px;
+  font-size: 14px;
+  z-index: 9999;
+  border-radius: 0 0 6px 6px;
+}
+
     body {
       background-color: #111;
       color: #eee;
@@ -58,6 +73,9 @@
   </style>
 </head>
 <body>
+  
+  <div id="disclaimer">⚠️ DO NOT USE WITHOUT AN ADBLOCKER — POPUPS MAY BE HARMFUL</div>
+
   <h1>🎬 IMDB Search to Stream</h1>
   <input type="text" id="searchInput" placeholder="Search for a movie or show...">
   <div id="results"></div>
