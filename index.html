@@ -192,13 +192,14 @@ function markWatched(id) {
     saveWatchlist();
     updateWatchlistUI();
     // Re-color any visible matching titles
-    const allTitles = document.querySelectorAll(".result");
-    allTitles.forEach(result => {
-      const titleElem = result.querySelector("h3");
-      if (titleElem && titleElem.textContent.includes(watchlist[id].title.split(" (")[0])) {
-        titleElem.style.color = "limegreen";
-      }
-    });
+const allResults = document.querySelectorAll(".result");
+allResults.forEach(result => {
+  const viewBtn = result.querySelector(".view-btn");
+  if (viewBtn && viewBtn.href.includes(id)) {
+    const titleElem = result.querySelector("h3");
+    if (titleElem) titleElem.style.color = "limegreen";
+  }
+});
   }
 }
 
