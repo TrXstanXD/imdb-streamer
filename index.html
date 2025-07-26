@@ -186,13 +186,21 @@ ${item.watched ? "✅ Watched" : `<button onclick="markWatched('${id}')" class="
     }
   }
 
-  function markWatched(id) {
-    if (watchlist[id]) {
-      watchlist[id].watched = true;
-      saveWatchlist();
-      updateWatchlistUI();
-    }
+function markWatched(id) {
+  if (watchlist[id]) {
+    watchlist[id].watched = true;
+    saveWatchlist();
+    updateWatchlistUI();
+    // Re-color any visible matching titles
+    const allTitles = document.querySelectorAll(".result");
+    allTitles.forEach(result => {
+      const titleElem = result.querySelector("h3");
+      if (titleElem && titleElem.textContent.includes(watchlist[id].title.split(" (")[0])) {
+        titleElem.style.color = "limegreen";
+      }
+    });
   }
+}
 
   function removeFromWatchlist(id) {
     delete watchlist[id];
