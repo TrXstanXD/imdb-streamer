@@ -13,8 +13,8 @@
       overflow-x: hidden;
     }
     .watched {
-  background-color: green !important;
-}
+      background-color: green !important;
+    }
     #disclaimer {
       position: fixed;
       top: 20px;
@@ -123,19 +123,10 @@
   </style>
 </head>
 <body>
-
   <div id="disclaimer">⚠️ DO NOT USE WITHOUT AN ADBLOCKER — POPUPS MAY BE HARMFUL</div>
 
   <div id="main">
-    <h1>🎬 IMDB Search to Stream</h1>
-    <div id="authArea">
-  <input type="email" id="emailInput" placeholder="Email" style="margin-right:5px;">
-  <input type="password" id="passwordInput" placeholder="Password" style="margin-right:5px;">
-  <button onclick="signUp()">Sign Up</button>
-  <button onclick="logIn()">Log In</button>
-  <button onclick="logOut()">Log Out</button>
-  <span id="userStatus" style="margin-left: 10px; color: lightgreen;"></span>
-</div>
+    <h1>🎮 IMDB Search to Stream</h1>
     <input type="text" id="searchInput" placeholder="Search for a movie or show...">
     <div id="results"></div>
   </div>
@@ -146,193 +137,178 @@
     <ul id="watchListItems"></ul>
   </div>
 
+  <footer style="position: fixed; bottom: 10px; left: 50%; transform: translateX(-50%); color: lightgray; font-size: 12px; z-index: 999;">
+    website created by Tristan McBride, video API not by me — I just created the GUI that sends you to SuperEmbed links
+  </footer>
 
-  const apiKey = "656d0795";
-  const searchInput = document.getElementById("searchInput");
-  const resultsDiv = document.getElementById("results");
+  <script>
+    const apiKey = "656d0795";
+    const searchInput = document.getElementById("searchInput");
+    const resultsDiv = document.getElementById("results");
+    const featuredIDs = ["tt6263850", "tt22022452", "tt7510222", "tt12584954", "tt23468450"];
+    let debounceTimeout;
+    let trendingHeader;
+    const watchlistContainer = document.getElementById("watchlistContainer");
+    const toggleWatchlist = document.getElementById("toggleWatchlist");
+    const watchListItems = document.getElementById("watchListItems");
+    const watchlist = JSON.parse(localStorage.getItem("watchlist") || "{}");
 
-  const featuredIDs = [
-    "tt6263850", // Deadpool & Wolverine
-    "tt22022452", // Inside Out 2
-    "tt7510222", // Despicable Me 4
-    "tt12584954", // Twisters
-    "tt23468450"  // Longlegs
-  ];
+    toggleWatchlist.addEventListener("click", () => {
+      watchlistContainer.classList.toggle("open");
+      toggleWatchlist.textContent = watchlistContainer.classList.contains("open") ? "◀️" : "➤";
+    });
 
-  let debounceTimeout;
-  let trendingHeader;
-
-  const watchlistContainer = document.getElementById("watchlistContainer");
-  const toggleWatchlist = document.getElementById("toggleWatchlist");
-  const watchListItems = document.getElementById("watchListItems");
-
-  const watchlist = JSON.parse(localStorage.getItem("watchlist") || "{}");
-
-  toggleWatchlist.addEventListener("click", () => {
-    watchlistContainer.classList.toggle("open");
-    toggleWatchlist.textContent = watchlistContainer.classList.contains("open") ? "◀️" : "➤";
-  });
-
-  function saveWatchlist() {
-    localStorage.setItem("watchlist", JSON.stringify(watchlist));
-  }
-
-  function updateWatchlistUI() {
-    watchListItems.innerHTML = "";
-    for (const id in watchlist) {
-      const item = watchlist[id];
-      const li = document.createElement("li");
-      li.innerHTML = 
-<strong style="color: ${item.watched ? 'limegreen' : 'white'}">${item.title}</strong><br>
-
-        <a href="details.html?id=${id}" class="view-btn" style="margin-top: 5px;">View</a>
-${item.watched ? "✅ Watched" : <button onclick="markWatched('${id}')" class="view-btn watched">Mark Watched</button>}
-
-        <button class="remove-btn" onclick="removeFromWatchlist('${id}')">Remove</button>
-      ;
-      watchListItems.appendChild(li);
+    function saveWatchlist() {
+      localStorage.setItem("watchlist", JSON.stringify(watchlist));
     }
-  }
 
-function markWatched(id) {
-  if (watchlist[id]) {
-    watchlist[id].watched = true;
-    saveWatchlist();
-    updateWatchlistUI();
-    // Re-color any visible matching titles
-const allResults = document.querySelectorAll(".result");
-allResults.forEach(result => {
-  const viewBtn = result.querySelector(".view-btn");
-  if (viewBtn && viewBtn.href.includes(id)) {
-    const titleElem = result.querySelector("h3");
-    if (titleElem) titleElem.style.color = "limegreen";
-  }
-});
-  }
-}
+    function updateWatchlistUI() {
+      watchListItems.innerHTML = "";
+      for (const id in watchlist) {
+        const item = watchlist[id];
+        const li = document.createElement("li");
+        li.innerHTML = `
+<strong style="color: ${item.watched ? 'limegreen' : 'white'}">${item.title}</strong><br>
+<a href="details.html?id=${id}" class="view-btn" style="margin-top: 5px;">View</a>
+${item.watched ? "✅ Watched" : `<button onclick="markWatched('${id}')" class="view-btn watched">Mark Watched</button>`}
+<button class="remove-btn" onclick="removeFromWatchlist('${id}')">Remove</button>`;
+        watchListItems.appendChild(li);
+      }
+    }
 
-  function removeFromWatchlist(id) {
-    delete watchlist[id];
-    saveWatchlist();
-    updateWatchlistUI();
-  }
+    function markWatched(id) {
+      if (watchlist[id]) {
+        watchlist[id].watched = true;
+        saveWatchlist();
+        updateWatchlistUI();
+        const allResults = document.querySelectorAll(".result");
+        allResults.forEach(result => {
+          const viewBtn = result.querySelector(".view-btn");
+          if (viewBtn && viewBtn.href.includes(id)) {
+            const titleElem = result.querySelector("h3");
+            if (titleElem) titleElem.style.color = "limegreen";
+          }
+        });
+      }
+    }
 
-  function addToWatchlist(id, title) {
-    if (!watchlist[id]) {
-      watchlist[id] = { title: title, watched: false };
+    function removeFromWatchlist(id) {
+      delete watchlist[id];
       saveWatchlist();
       updateWatchlistUI();
     }
-  }
 
-  searchInput.addEventListener("input", () => {
-    clearTimeout(debounceTimeout);
-    debounceTimeout = setTimeout(() => {
-      const query = searchInput.value.trim();
-      if (query) {
-        clearTrendingTitle();
-        fetchResults(query);
-      } else {
-        showFeatured();
+    function addToWatchlist(id, title) {
+      if (!watchlist[id]) {
+        watchlist[id] = { title: title, watched: false };
+        saveWatchlist();
+        updateWatchlistUI();
       }
-    }, 500);
-  });
-
-  document.addEventListener("DOMContentLoaded", () => {
-    showFeatured();
-    updateWatchlistUI();
-  });
-
-  function addTrendingTitle() {
-    if (!trendingHeader) {
-      trendingHeader = document.createElement("h2");
-      trendingHeader.textContent = "🔥 Trending Movies";
-      trendingHeader.style.textAlign = "left";
-      trendingHeader.style.margin = "30px auto 10px";
-      trendingHeader.style.maxWidth = "600px";
-      resultsDiv.insertAdjacentElement("beforebegin", trendingHeader);
     }
-  }
 
-  function clearTrendingTitle() {
-    if (trendingHeader) {
-      trendingHeader.remove();
-      trendingHeader = null;
+    searchInput.addEventListener("input", () => {
+      clearTimeout(debounceTimeout);
+      debounceTimeout = setTimeout(() => {
+        const query = searchInput.value.trim();
+        if (query) {
+          clearTrendingTitle();
+          fetchResults(query);
+        } else {
+          showFeatured();
+        }
+      }, 500);
+    });
+
+    document.addEventListener("DOMContentLoaded", () => {
+      showFeatured();
+      updateWatchlistUI();
+    });
+
+    function addTrendingTitle() {
+      if (!trendingHeader) {
+        trendingHeader = document.createElement("h2");
+        trendingHeader.textContent = "🔥 Trending Movies";
+        trendingHeader.style.textAlign = "left";
+        trendingHeader.style.margin = "30px auto 10px";
+        trendingHeader.style.maxWidth = "600px";
+        resultsDiv.insertAdjacentElement("beforebegin", trendingHeader);
+      }
     }
-  }
 
-  async function showFeatured() {
-    resultsDiv.innerHTML = "";
-    clearTrendingTitle();
-    addTrendingTitle();
-    for (const id of featuredIDs) {
-      const res = await fetch(https://www.omdbapi.com/?apikey=${apiKey}&i=${id});
+    function clearTrendingTitle() {
+      if (trendingHeader) {
+        trendingHeader.remove();
+        trendingHeader = null;
+      }
+    }
+
+    async function showFeatured() {
+      resultsDiv.innerHTML = "";
+      clearTrendingTitle();
+      addTrendingTitle();
+      for (const id of featuredIDs) {
+        const res = await fetch(`https://www.omdbapi.com/?apikey=${apiKey}&i=${id}`);
+        const data = await res.json();
+        if (data.Response === "True") {
+          renderResult(data);
+        }
+      }
+    }
+
+    async function fetchResults(query) {
+      resultsDiv.innerHTML = "";
+      const res = await fetch(`https://www.omdbapi.com/?apikey=${apiKey}&s=${encodeURIComponent(query)}`);
       const data = await res.json();
-      if (data.Response === "True") {
-        renderResult(data);
+      if (data.Response === "False") {
+        resultsDiv.innerHTML = `<p>No results found.</p>`;
+        return;
+      }
+      for (const item of data.Search) {
+        const resDetail = await fetch(`https://www.omdbapi.com/?apikey=${apiKey}&i=${item.imdbID}`);
+        const fullData = await resDetail.json();
+        if (fullData.Response === "True") {
+          renderResult(fullData);
+        }
       }
     }
-  }
 
-  async function fetchResults(query) {
-    resultsDiv.innerHTML = "";
-    const res = await fetch(https://www.omdbapi.com/?apikey=${apiKey}&s=${encodeURIComponent(query)});
-    const data = await res.json();
+    function renderResult(data) {
+      const container = document.createElement("div");
+      container.className = "result";
 
-    if (data.Response === "False") {
-      resultsDiv.innerHTML = <p>No results found.</p>;
-      return;
+      const poster = document.createElement("img");
+      poster.className = "poster";
+      poster.src = data.Poster !== "N/A" ? data.Poster : "https://via.placeholder.com/100x150?text=No+Image";
+      container.appendChild(poster);
+
+      const info = document.createElement("div");
+      info.className = "info";
+
+      const title = document.createElement("h3");
+      const isWatched = watchlist[data.imdbID]?.watched;
+      title.textContent = `${data.Title} (${data.Year})`;
+      if (isWatched) title.style.color = "limegreen";
+      info.appendChild(title);
+
+      const viewBtn = document.createElement("a");
+      viewBtn.className = "view-btn";
+      viewBtn.href = `details.html?id=${data.imdbID}`;
+      viewBtn.textContent = "View Details";
+      info.appendChild(viewBtn);
+
+      const addBtn = document.createElement("button");
+      addBtn.className = "view-btn";
+      addBtn.style.marginLeft = "10px";
+      addBtn.textContent = "Add to List";
+      addBtn.onclick = () => addToWatchlist(data.imdbID, `${data.Title} (${data.Year})`);
+      info.appendChild(addBtn);
+
+      container.appendChild(info);
+      resultsDiv.appendChild(container);
     }
 
-    for (const item of data.Search) {
-      const resDetail = await fetch(https://www.omdbapi.com/?apikey=${apiKey}&i=${item.imdbID});
-      const fullData = await resDetail.json();
-      if (fullData.Response === "True") {
-        renderResult(fullData);
-      }
-    }
-  }
-
-  function renderResult(data) {
-    const container = document.createElement("div");
-    container.className = "result";
-
-    const poster = document.createElement("img");
-    poster.className = "poster";
-    poster.src = data.Poster !== "N/A" ? data.Poster : "https://via.placeholder.com/100x150?text=No+Image";
-    container.appendChild(poster);
-
-    const info = document.createElement("div");
-    info.className = "info";
-
-    const title = document.createElement("h3");
-const isWatched = watchlist[data.imdbID]?.watched;
-title.textContent = ${data.Title} (${data.Year});
-if (isWatched) title.style.color = "limegreen";
-    info.appendChild(title);
-
-    const viewBtn = document.createElement("a");
-    viewBtn.className = "view-btn";
-    viewBtn.href = details.html?id=${data.imdbID};
-    viewBtn.textContent = "View Details";
-    info.appendChild(viewBtn);
-
-    const addBtn = document.createElement("button");
-    addBtn.className = "view-btn";
-    addBtn.style.marginLeft = "10px";
-    addBtn.textContent = "Add to List";
-    addBtn.onclick = () => addToWatchlist(data.imdbID, ${data.Title} (${data.Year}));
-    info.appendChild(addBtn);
-
-    container.appendChild(info);
-    resultsDiv.appendChild(container);
-  }
-
-  window.markWatched = markWatched;
-  window.removeFromWatchlist = removeFromWatchlist;
-</script>
-<footer style="position: fixed; bottom: 10px; left: 50%; transform: translateX(-50%); color: lightgray; font-size: 12px; z-index: 999;">
-  website created by Tristan McBride, video API not by me — I just created the GUI that sends you to SuperEmbed links
-</footer>
+    window.markWatched = markWatched;
+    window.removeFromWatchlist = removeFromWatchlist;
+  </script>
 </body>
 </html>
