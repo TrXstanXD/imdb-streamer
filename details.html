@@ -11,6 +11,7 @@
       font-family: Arial, sans-serif;
       padding: 40px;
       text-align: center;
+      margin: 0;
     }
     .container {
       max-width: 600px;
@@ -18,6 +19,8 @@
       background: #222;
       padding: 20px;
       border-radius: 10px;
+      position: relative;
+      z-index: 1;
     }
     img {
       width: 200px;
@@ -46,36 +49,62 @@
     .watch-btn:hover {
       background-color: #218838;
     }
-    iframe {
-      margin-top: 20px;
-      width: 100%;
-      height: 350px;
-      border: none;
-      border-radius: 10px;
+    #videoOverlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: black;
       display: none;
+      z-index: 999;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+    }
+    #videoOverlay iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+    #closeBtn {
+      position: absolute;
+      top: 20px;
+      right: 30px;
+      background: rgba(0,0,0,0.6);
+      color: white;
+      font-size: 30px;
+      border: none;
+      cursor: pointer;
+      z-index: 1000;
     }
   </style>
 </head>
 <body>
 
-<a href="index.html" style="position: absolute; top: 20px; left: 20px; background-color: #333; color: #fff; padding: 8px 12px; border-radius: 6px; text-decoration: none; font-size: 14px;">
+<a href="index.html" style="position: absolute; top: 20px; left: 20px; background-color: #333; color: #fff; padding: 8px 12px; border-radius: 6px; text-decoration: none; font-size: 14px; z-index: 2;">
   ⬅️ Home
 </a>
 
 <div class="container" id="container"></div>
-<iframe id="videoFrame"></iframe>
+
+<div id="videoOverlay">
+  <button id="closeBtn">✖</button>
+  <iframe id="videoFrame" allowfullscreen></iframe>
+</div>
 
 <script>
   const apiKey = "656d0795";
   const urlParams = new URLSearchParams(window.location.search);
   const imdbID = urlParams.get("id");
   const container = document.getElementById("container");
-  const iframe = document.getElementById("videoFrame");
+  const overlay = document.getElementById("videoOverlay");
+  const videoFrame = document.getElementById("videoFrame");
+  const closeBtn = document.getElementById("closeBtn");
 
   async function loadDetails() {
     const res = await fetch(`https://www.omdbapi.com/?apikey=${apiKey}&i=${imdbID}&plot=full`);
     const data = await res.json();
-
     const isSeries = data.Type === "series";
 
     let html = `
@@ -104,31 +133,29 @@
       const episodeSelect = document.getElementById("episodeSelect");
 
       for (let i = 1; i <= parseInt(data.totalSeasons); i++) {
-        const option = document.createElement("option");
-        option.value = i;
-        option.textContent = `Season ${i}`;
-        seasonSelect.appendChild(option);
+        const opt = document.createElement("option");
+        opt.value = i;
+        opt.textContent = `Season ${i}`;
+        seasonSelect.appendChild(opt);
       }
 
       seasonSelect.addEventListener("change", () => loadEpisodes(seasonSelect.value));
       episodeSelect.addEventListener("change", () => {
-        const url = `https://multiembed.mov/directstream.php?video_id=${imdbID}&s=${seasonSelect.value}&e=${episodeSelect.value}`;
-        iframe.src = url;
-        iframe.style.display = "block";
+        videoFrame.src = `https://multiembed.mov/directstream.php?video_id=${imdbID}&s=${seasonSelect.value}&e=${episodeSelect.value}`;
       });
 
       watchBtn.addEventListener("click", () => {
-        const url = `https://multiembed.mov/directstream.php?video_id=${imdbID}&s=${seasonSelect.value}&e=${episodeSelect.value}`;
-        iframe.src = url;
-        iframe.style.display = "block";
+        const season = seasonSelect.value;
+        const episode = episodeSelect.value;
+        videoFrame.src = `https://multiembed.mov/directstream.php?video_id=${imdbID}&s=${season}&e=${episode}`;
+        overlay.style.display = "flex";
       });
 
       await loadEpisodes(1);
     } else {
-      const url = `https://multiembed.mov/directstream.php?video_id=${imdbID}`;
       watchBtn.addEventListener("click", () => {
-        iframe.src = url;
-        iframe.style.display = "block";
+        videoFrame.src = `https://multiembed.mov/directstream.php?video_id=${imdbID}`;
+        overlay.style.display = "flex";
       });
     }
   }
@@ -146,6 +173,11 @@
       episodeSelect.appendChild(opt);
     }
   }
+
+  closeBtn.addEventListener("click", () => {
+    videoFrame.src = "";
+    overlay.style.display = "none";
+  });
 
   loadDetails();
 </script>
