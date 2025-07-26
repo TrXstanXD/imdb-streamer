@@ -12,9 +12,6 @@
       margin: 0;
       overflow-x: hidden;
     }
-    .watched {
-      background-color: green !important;
-    }
     #disclaimer {
       position: fixed;
       top: 20px;
@@ -35,13 +32,13 @@
       margin: 0 auto;
       text-align: center;
     }
-    input[type="text"] {
-      width: 300px;
+    input[type="text"], input[type="email"], input[type="password"] {
+      width: 250px;
       padding: 10px;
       font-size: 16px;
       border-radius: 6px;
       border: none;
-      margin-bottom: 20px;
+      margin: 5px;
     }
     .result {
       margin: 20px auto;
@@ -77,14 +74,8 @@
       display: inline-block;
       cursor: pointer;
     }
-    .remove-btn {
-      background-color: #cc0000;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      padding: 4px 6px;
-      margin-left: 4px;
-      cursor: pointer;
+    .watched {
+      background-color: green !important;
     }
     #watchlistContainer {
       position: fixed;
@@ -116,16 +107,16 @@
       cursor: pointer;
       z-index: 1001;
     }
-    #watchListItems {
-      list-style: none;
-      padding: 0;
+    .remove-btn {
+      background-color: #cc0000;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      padding: 4px 6px;
+      margin-left: 4px;
+      cursor: pointer;
     }
   </style>
-
-  <!-- Firebase SDKs -->
-  <script src="https://www.gstatic.com/firebasejs/10.5.2/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.5.2/firebase-auth.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.5.2/firebase-database.js"></script>
 </head>
 <body>
   <div id="disclaimer">⚠️ DO NOT USE WITHOUT AN ADBLOCKER — POPUPS MAY BE HARMFUL</div>
@@ -133,8 +124,8 @@
   <div id="main">
     <h1>🎬 IMDB Search to Stream</h1>
     <div id="authArea">
-      <input type="email" id="emailInput" placeholder="Email" style="margin-right:5px;">
-      <input type="password" id="passwordInput" placeholder="Password" style="margin-right:5px;">
+      <input type="email" id="emailInput" placeholder="Email">
+      <input type="password" id="passwordInput" placeholder="Password">
       <button onclick="signUp()">Sign Up</button>
       <button onclick="logIn()">Log In</button>
       <button onclick="logOut()">Log Out</button>
@@ -154,6 +145,22 @@
     website created by Tristan McBride, video API not by me — I just created the GUI that sends you to SuperEmbed links
   </footer>
 
-  <script src="script.js"></script>
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.5.2/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.5.2/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.5.2/firebase-database.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyAvgoy-Fxuwio3AEE7lprncd_iODXLBT8c",
+      authDomain: "imdbstreamer.firebaseapp.com",
+      projectId: "imdbstreamer",
+      storageBucket: "imdbstreamer.appspot.com",
+      messagingSenderId: "969679453662",
+      appId: "1:969679453662:web:608e0c1200c90ea58fb14f",
+      measurementId: "G-THMCTDKYKZ"
+    };
+    firebase.initializeApp(firebaseConfig);
+  </script>
+  <script src="app.js"></script> <!-- Your original JavaScript logic for watchlist/search/trending -->
 </body>
 </html>
