@@ -5,26 +5,39 @@
   <title>IMDB Stream Search</title>
   <link rel="icon" href="favicon.png" type="image/png">
   <style>
-#disclaimer {
-  position: fixed;
-  top: 20px;
-  left: 20px;
-  background-color: red;
-  color: white;
-  font-weight: bold;
-  padding: 10px 16px;
-  font-size: 14px;
-  z-index: 9999;
-  border-radius: 6px;
-  white-space: nowrap;
-  box-shadow: 0 0 6px rgba(0,0,0,0.5);
-}
     body {
       background-color: #111;
       color: #eee;
       font-family: Arial, sans-serif;
+      margin: 0;
+      display: flex;
+    }
+    #disclaimer {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      background-color: red;
+      color: white;
+      font-weight: bold;
+      padding: 10px 16px;
+      font-size: 14px;
+      z-index: 9999;
+      border-radius: 6px;
+      white-space: nowrap;
+      box-shadow: 0 0 6px rgba(0,0,0,0.5);
+    }
+    #main {
       padding: 40px;
+      flex: 3;
       text-align: center;
+    }
+    #watchList {
+      background-color: #1a1a1a;
+      border-left: 2px solid #333;
+      padding: 20px;
+      width: 300px;
+      flex-shrink: 0;
+      overflow-y: auto;
     }
     input[type="text"] {
       width: 300px;
@@ -56,8 +69,8 @@
       margin: 0;
       font-size: 20px;
     }
-    .view-btn {
-      margin-top: 10px;
+    .view-btn, .add-btn, .watched-btn {
+      margin: 5px 5px 0 0;
       padding: 8px;
       font-size: 14px;
       border-radius: 6px;
@@ -66,126 +79,146 @@
       color: white;
       text-decoration: none;
       display: inline-block;
+      cursor: pointer;
     }
-    .view-btn:hover {
-      background-color: #0056b3;
+    .watched {
+      background-color: green;
     }
   </style>
 </head>
 <body>
-  
   <div id="disclaimer">⚠️ DO NOT USE WITHOUT AN ADBLOCKER — POPUPS MAY BE HARMFUL</div>
+  <div id="main">
+    <h1>🎬 IMDB Search to Stream</h1>
+    <input type="text" id="searchInput" placeholder="Search for a movie or show...">
+    <div id="results"></div>
+  </div>
+  <div id="watchList">
+    <h2>Your Watch List</h2>
+    <ul id="watchListItems" style="list-style: none; padding: 0;"></ul>
+  </div>
+  <script>
+    const apiKey = "656d0795";
+    const searchInput = document.getElementById("searchInput");
+    const resultsDiv = document.getElementById("results");
+    const listUl = document.getElementById("watchListItems");
+    let debounceTimeout;
 
-  <h1>🎬 IMDB Search to Stream</h1>
-  <input type="text" id="searchInput" placeholder="Search for a movie or show...">
-  <div id="results"></div>
-<script>
-  const apiKey = "656d0795";
-  const searchInput = document.getElementById("searchInput");
-  const resultsDiv = document.getElementById("results");
+    const featuredIDs = [
+      "tt6263850", "tt22022452", "tt7510222", "tt12584954", "tt23468450"
+    ];
 
-const featuredIDs = [
-  "tt6263850", // Deadpool & Wolverine
-  "tt22022452", // Inside Out 2
-  "tt7510222", // Despicable Me 4
-  "tt12584954",  // Twisters
-  "tt23468450"  // Longlegs
-];
+    function saveWatchList(data) {
+      localStorage.setItem("watchList", JSON.stringify(data));
+    }
 
-  let trendingHeader;
+    function getWatchList() {
+      return JSON.parse(localStorage.getItem("watchList")) || [];
+    }
 
-  searchInput.addEventListener("input", () => {
-    clearTimeout(debounceTimeout);
-    debounceTimeout = setTimeout(() => {
-      const query = searchInput.value.trim();
-      if (query) {
-        clearTrendingTitle();
-        fetchResults(query);
-      } else {
-        showFeatured();
+    function updateWatchListUI() {
+      const list = getWatchList();
+      listUl.innerHTML = "";
+      list.forEach(item => {
+        const li = document.createElement("li");
+        li.style.marginBottom = "10px";
+        li.innerHTML = `
+          <strong>${item.title}</strong>
+          <br><a class="view-btn" href="details.html?id=${item.imdbID}">Details</a>
+          <button class="watched-btn ${item.watched ? 'watched' : ''}" data-id="${item.imdbID}">
+            ${item.watched ? '✅ Watched' : 'Mark Watched'}
+          </button>`;
+        listUl.appendChild(li);
+      });
+    }
+
+    listUl.addEventListener("click", (e) => {
+      if (e.target.classList.contains("watched-btn")) {
+        const id = e.target.dataset.id;
+        const list = getWatchList();
+        const movie = list.find(i => i.imdbID === id);
+        if (movie) {
+          movie.watched = !movie.watched;
+          saveWatchList(list);
+          updateWatchListUI();
+        }
       }
-    }, 500);
-  });
+    });
 
-  document.addEventListener("DOMContentLoaded", showFeatured);
+    searchInput.addEventListener("input", () => {
+      clearTimeout(debounceTimeout);
+      debounceTimeout = setTimeout(() => {
+        const query = searchInput.value.trim();
+        if (query) {
+          fetchResults(query);
+        } else {
+          showFeatured();
+        }
+      }, 500);
+    });
 
-  function addTrendingTitle() {
-    if (!trendingHeader) {
-      trendingHeader = document.createElement("h2");
-      trendingHeader.textContent = "🔥 Trending Movies";
-      trendingHeader.style.textAlign = "left";
-      trendingHeader.style.margin = "30px auto 10px";
-      trendingHeader.style.maxWidth = "600px";
-      resultsDiv.insertAdjacentElement("beforebegin", trendingHeader);
+    document.addEventListener("DOMContentLoaded", () => {
+      showFeatured();
+      updateWatchListUI();
+    });
+
+    async function showFeatured() {
+      resultsDiv.innerHTML = "<h2 style='text-align:left;max-width:600px;margin:30px auto 10px'>🔥 Trending Movies</h2>";
+      for (const id of featuredIDs) {
+        const res = await fetch(`https://www.omdbapi.com/?apikey=${apiKey}&i=${id}`);
+        const data = await res.json();
+        if (data.Response === "True") renderResult(data);
+      }
     }
-  }
 
-  function clearTrendingTitle() {
-    if (trendingHeader) {
-      trendingHeader.remove();
-      trendingHeader = null;
-    }
-  }
-
-  async function showFeatured() {
-    resultsDiv.innerHTML = "";
-    clearTrendingTitle();
-    addTrendingTitle();
-    for (const id of featuredIDs) {
-      const res = await fetch(`https://www.omdbapi.com/?apikey=${apiKey}&i=${id}`);
+    async function fetchResults(query) {
+      const res = await fetch(`https://www.omdbapi.com/?apikey=${apiKey}&s=${encodeURIComponent(query)}`);
       const data = await res.json();
-      if (data.Response === "True") {
-        renderResult(data);
+      resultsDiv.innerHTML = "";
+      if (data.Response === "False") return resultsDiv.innerHTML = `<p>No results found.</p>`;
+      for (const item of data.Search) {
+        const full = await fetch(`https://www.omdbapi.com/?apikey=${apiKey}&i=${item.imdbID}`);
+        const fullData = await full.json();
+        if (fullData.Response === "True") renderResult(fullData);
       }
     }
-  }
 
-  async function fetchResults(query) {
-    resultsDiv.innerHTML = "";
-    const res = await fetch(`https://www.omdbapi.com/?apikey=${apiKey}&s=${encodeURIComponent(query)}`);
-    const data = await res.json();
+    function renderResult(data) {
+      const container = document.createElement("div");
+      container.className = "result";
+      const poster = document.createElement("img");
+      poster.className = "poster";
+      poster.src = data.Poster !== "N/A" ? data.Poster : "https://via.placeholder.com/100x150?text=No+Image";
+      container.appendChild(poster);
 
-    if (data.Response === "False") {
-      resultsDiv.innerHTML = `<p>No results found.</p>`;
-      return;
+      const info = document.createElement("div");
+      info.className = "info";
+      const title = document.createElement("h3");
+      title.textContent = `${data.Title} (${data.Year})`;
+      info.appendChild(title);
+
+      const viewBtn = document.createElement("a");
+      viewBtn.className = "view-btn";
+      viewBtn.href = `details.html?id=${data.imdbID}`;
+      viewBtn.textContent = "View Details";
+      info.appendChild(viewBtn);
+
+      const addBtn = document.createElement("button");
+      addBtn.className = "add-btn";
+      addBtn.textContent = "Add to List";
+      addBtn.onclick = () => {
+        const list = getWatchList();
+        if (!list.some(m => m.imdbID === data.imdbID)) {
+          list.push({ imdbID: data.imdbID, title: `${data.Title} (${data.Year})`, watched: false });
+          saveWatchList(list);
+          updateWatchListUI();
+        }
+      };
+      info.appendChild(addBtn);
+
+      container.appendChild(info);
+      resultsDiv.appendChild(container);
     }
-
-    for (const item of data.Search) {
-      const resDetail = await fetch(`https://www.omdbapi.com/?apikey=${apiKey}&i=${item.imdbID}`);
-      const fullData = await resDetail.json();
-      if (fullData.Response === "True") {
-        renderResult(fullData);
-      }
-    }
-  }
-
-  function renderResult(data) {
-    const container = document.createElement("div");
-    container.className = "result";
-
-    const poster = document.createElement("img");
-    poster.className = "poster";
-    poster.src = data.Poster !== "N/A" ? data.Poster : "https://via.placeholder.com/100x150?text=No+Image";
-    container.appendChild(poster);
-
-    const info = document.createElement("div");
-    info.className = "info";
-
-    const title = document.createElement("h3");
-    title.textContent = `${data.Title} (${data.Year})`;
-    info.appendChild(title);
-
-    const viewBtn = document.createElement("a");
-    viewBtn.className = "view-btn";
-    viewBtn.href = `details.html?id=${data.imdbID}`;
-    viewBtn.textContent = "View Details";
-    info.appendChild(viewBtn);
-
-    container.appendChild(info);
-    resultsDiv.appendChild(container);
-  }
-
-  let debounceTimeout;
-</script>
+  </script>
 </body>
 </html>
