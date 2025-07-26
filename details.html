@@ -67,6 +67,14 @@
       height: 100%;
       border: none;
     }
+    #clickShield {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 9999;
+    }
     #closeBtn {
       position: absolute;
       top: 20px;
@@ -76,6 +84,13 @@
       font-size: 30px;
       border: none;
       cursor: pointer;
+      z-index: 1000;
+    }
+    #warning {
+      position: absolute;
+      bottom: 20px;
+      color: lightgray;
+      font-size: 14px;
       z-index: 1000;
     }
   </style>
@@ -90,7 +105,9 @@
 
 <div id="videoOverlay">
   <button id="closeBtn">✖</button>
+  <div id="clickShield"></div>
   <iframe id="videoFrame" allowfullscreen></iframe>
+  <div id="warning">⚠️ If popups appear, close them immediately. Use an ad blocker if possible.</div>
 </div>
 
 <script>
@@ -101,6 +118,13 @@
   const overlay = document.getElementById("videoOverlay");
   const videoFrame = document.getElementById("videoFrame");
   const closeBtn = document.getElementById("closeBtn");
+  const clickShield = document.getElementById("clickShield");
+
+  // Prevent clicks from triggering popups
+  clickShield.addEventListener("click", (e) => {
+    e.stopPropagation();
+    e.preventDefault();
+  });
 
   async function loadDetails() {
     const res = await fetch(`https://www.omdbapi.com/?apikey=${apiKey}&i=${imdbID}&plot=full`);
