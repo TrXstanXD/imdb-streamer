@@ -79,59 +79,7 @@
   <h1>🎬 IMDB Search to Stream</h1>
   <input type="text" id="searchInput" placeholder="Search for a movie or show...">
   <div id="results"></div>
-  <script>
-    const apiKey = "656d0795";
-    const searchInput = document.getElementById("searchInput");
-    const resultsDiv = document.getElementById("results");
-    let debounceTimeout;
-
-    searchInput.addEventListener("input", () => {
-      clearTimeout(debounceTimeout);
-      debounceTimeout = setTimeout(fetchResults, 500);
-    });
-
-    async function fetchResults() {
-      const query = searchInput.value.trim();
-      if (!query) return resultsDiv.innerHTML = "";
-
-      const res = await fetch(`https://www.omdbapi.com/?apikey=${apiKey}&s=${encodeURIComponent(query)}`);
-      const data = await res.json();
-
-      if (data.Response === "False") {
-        resultsDiv.innerHTML = `<p>No results found.</p>`;
-        return;
-      }
-
-      resultsDiv.innerHTML = "";
-      for (const item of data.Search) {
-        const id = item.imdbID;
-        const container = document.createElement("div");
-        container.className = "result";
-
-        const poster = document.createElement("img");
-        poster.className = "poster";
-        poster.src = item.Poster !== "N/A" ? item.Poster : "https://via.placeholder.com/100x150?text=No+Image";
-        container.appendChild(poster);
-
-        const info = document.createElement("div");
-        info.className = "info";
-
-        const title = document.createElement("h3");
-        title.textContent = `${item.Title} (${item.Year})`;
-        info.appendChild(title);
-
-        const viewBtn = document.createElement("a");
-        viewBtn.className = "view-btn";
-        viewBtn.href = `details.html?id=${id}`;
-        viewBtn.textContent = "View Details";
-        info.appendChild(viewBtn);
-
-        container.appendChild(info);
-        resultsDiv.appendChild(container);
-      }
-    }
-  </script>
-  <script>
+<script>
   const apiKey = "656d0795";
   const searchInput = document.getElementById("searchInput");
   const resultsDiv = document.getElementById("results");
@@ -140,42 +88,32 @@
     "tt21032864", // Deadpool & Wolverine
     "tt20917338", // Inside Out 2
     "tt14849194", // Despicable Me 4
-    "tt17009710", // A Quiet Place: Day One
-    "tt23289160"  // Happy Gilmore 2 (not real, example placeholder)
+    "tt17009710"  // A Quiet Place: Day One
   ];
 
   let debounceTimeout;
 
+  // Handle search input
   searchInput.addEventListener("input", () => {
     clearTimeout(debounceTimeout);
     debounceTimeout = setTimeout(() => {
-      if (searchInput.value.trim()) {
-        fetchResults(searchInput.value.trim());
+      const query = searchInput.value.trim();
+      if (query) {
+        fetchResults(query);
       } else {
         showFeatured();
       }
     }, 500);
   });
 
-  // Show featured movies on load
+  // Show featured on load
   document.addEventListener("DOMContentLoaded", showFeatured);
 
-  async function showFeatured() {
-    resultsDiv.innerHTML = "";
-    for (const id of featuredIDs) {
-      const res = await fetch(`https://www.omdbapi.com/?apikey=${apiKey}&i=${id}`);
-      const data = await res.json();
-      if (data.Response === "True") {
-        renderResult(data);
-      }
-    }
-  }
-
   async function fetchResults(query) {
+    resultsDiv.innerHTML = "";
     const res = await fetch(`https://www.omdbapi.com/?apikey=${apiKey}&s=${encodeURIComponent(query)}`);
     const data = await res.json();
 
-    resultsDiv.innerHTML = "";
     if (data.Response === "False") {
       resultsDiv.innerHTML = `<p>No results found.</p>`;
       return;
@@ -186,6 +124,17 @@
       const fullData = await resDetail.json();
       if (fullData.Response === "True") {
         renderResult(fullData);
+      }
+    }
+  }
+
+  async function showFeatured() {
+    resultsDiv.innerHTML = "";
+    for (const id of featuredIDs) {
+      const res = await fetch(`https://www.omdbapi.com/?apikey=${apiKey}&i=${id}`);
+      const data = await res.json();
+      if (data.Response === "True") {
+        renderResult(data);
       }
     }
   }
@@ -216,6 +165,5 @@
     resultsDiv.appendChild(container);
   }
 </script>
-
 </body>
 </html>
