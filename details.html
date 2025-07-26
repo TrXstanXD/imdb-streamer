@@ -41,90 +41,114 @@
       color: white;
       text-decoration: none;
       display: inline-block;
+      cursor: pointer;
     }
     .watch-btn:hover {
       background-color: #218838;
     }
+    iframe {
+      margin-top: 20px;
+      width: 100%;
+      height: 350px;
+      border: none;
+      border-radius: 10px;
+      display: none;
+    }
   </style>
 </head>
 <body>
-  
-  <a href="index.html" style="position: absolute; top: 20px; left: 20px; background-color: #333; color: #fff; padding: 8px 12px; border-radius: 6px; text-decoration: none; font-size: 14px;">
+
+<a href="index.html" style="position: absolute; top: 20px; left: 20px; background-color: #333; color: #fff; padding: 8px 12px; border-radius: 6px; text-decoration: none; font-size: 14px;">
   ⬅️ Home
 </a>
 
-  <div class="container" id="container"></div>
-  <script>
-    const apiKey = "656d0795";
-    const urlParams = new URLSearchParams(window.location.search);
-    const imdbID = urlParams.get("id");
-    const container = document.getElementById("container");
+<div class="container" id="container"></div>
+<iframe id="videoFrame"></iframe>
 
-    async function loadDetails() {
-      const res = await fetch(`https://www.omdbapi.com/?apikey=${apiKey}&i=${imdbID}&plot=full`);
-      const data = await res.json();
+<script>
+  const apiKey = "656d0795";
+  const urlParams = new URLSearchParams(window.location.search);
+  const imdbID = urlParams.get("id");
+  const container = document.getElementById("container");
+  const iframe = document.getElementById("videoFrame");
 
-      const isSeries = data.Type === "series";
+  async function loadDetails() {
+    const res = await fetch(`https://www.omdbapi.com/?apikey=${apiKey}&i=${imdbID}&plot=full`);
+    const data = await res.json();
 
-      let html = `
-        <img src="${data.Poster !== "N/A" ? data.Poster : "https://via.placeholder.com/100x150?text=No+Image"}" alt="Poster">
-        <h1>${data.Title} (${data.Year})</h1>
-        <p>${data.Plot}</p>
+    const isSeries = data.Type === "series";
+
+    let html = `
+      <img src="${data.Poster !== "N/A" ? data.Poster : "https://via.placeholder.com/100x150?text=No+Image"}" alt="Poster">
+      <h1>${data.Title} (${data.Year})</h1>
+      <p>${data.Plot}</p>
+    `;
+
+    if (isSeries) {
+      html += `
+        <select id="seasonSelect"></select>
+        <select id="episodeSelect"></select>
+        <br>
+        <button class="watch-btn" id="watchBtn">▶️ Watch</button>
       `;
-
-      if (isSeries) {
-        html += `
-          <select id="seasonSelect"></select>
-          <select id="episodeSelect"></select>
-          <br>
-          <a class="watch-btn" id="watchBtn" target="_blank">▶️ Watch</a>
-        `;
-      } else {
-        html += `<a class="watch-btn" href="https://multiembed.mov/directstream.php?video_id=${imdbID}" target="_blank">▶️ Watch</a>`;
-      }
-
-      container.innerHTML = html;
-
-      if (isSeries) {
-        const totalSeasons = parseInt(data.totalSeasons);
-        const seasonSelect = document.getElementById("seasonSelect");
-        const episodeSelect = document.getElementById("episodeSelect");
-        const watchBtn = document.getElementById("watchBtn");
-
-        for (let i = 1; i <= totalSeasons; i++) {
-          const option = document.createElement("option");
-          option.value = i;
-          option.textContent = `Season ${i}`;
-          seasonSelect.appendChild(option);
-        }
-
-        seasonSelect.addEventListener("change", () => loadEpisodes(seasonSelect.value));
-        episodeSelect.addEventListener("change", () => {
-          watchBtn.href = `https://multiembed.mov/directstream.php?video_id=${imdbID}&s=${seasonSelect.value}&e=${episodeSelect.value}`;
-        });
-
-        await loadEpisodes(1);
-      }
+    } else {
+      html += `<button class="watch-btn" id="watchBtn">▶️ Watch</button>`;
     }
 
-    async function loadEpisodes(season) {
-      const res = await fetch(`https://www.omdbapi.com/?apikey=${apiKey}&i=${imdbID}&season=${season}`);
-      const data = await res.json();
+    container.innerHTML = html;
+
+    const watchBtn = document.getElementById("watchBtn");
+
+    if (isSeries) {
+      const seasonSelect = document.getElementById("seasonSelect");
       const episodeSelect = document.getElementById("episodeSelect");
-      const watchBtn = document.getElementById("watchBtn");
 
-      episodeSelect.innerHTML = "";
-      for (const ep of data.Episodes) {
-        const opt = document.createElement("option");
-        opt.value = ep.Episode;
-        opt.textContent = `Ep ${ep.Episode}: ${ep.Title}`;
-        episodeSelect.appendChild(opt);
+      for (let i = 1; i <= parseInt(data.totalSeasons); i++) {
+        const option = document.createElement("option");
+        option.value = i;
+        option.textContent = `Season ${i}`;
+        seasonSelect.appendChild(option);
       }
 
-      watchBtn.href = `https://multiembed.mov/directstream.php?video_id=${imdbID}&s=${season}&e=${data.Episodes[0].Episode}`;
-    }
+      seasonSelect.addEventListener("change", () => loadEpisodes(seasonSelect.value));
+      episodeSelect.addEventListener("change", () => {
+        const url = `https://multiembed.mov/directstream.php?video_id=${imdbID}&s=${seasonSelect.value}&e=${episodeSelect.value}`;
+        iframe.src = url;
+        iframe.style.display = "block";
+      });
 
-    loadDetails();
-  </script>
+      watchBtn.addEventListener("click", () => {
+        const url = `https://multiembed.mov/directstream.php?video_id=${imdbID}&s=${seasonSelect.value}&e=${episodeSelect.value}`;
+        iframe.src = url;
+        iframe.style.display = "block";
+      });
+
+      await loadEpisodes(1);
+    } else {
+      const url = `https://multiembed.mov/directstream.php?video_id=${imdbID}`;
+      watchBtn.addEventListener("click", () => {
+        iframe.src = url;
+        iframe.style.display = "block";
+      });
+    }
+  }
+
+  async function loadEpisodes(season) {
+    const res = await fetch(`https://www.omdbapi.com/?apikey=${apiKey}&i=${imdbID}&season=${season}`);
+    const data = await res.json();
+    const episodeSelect = document.getElementById("episodeSelect");
+
+    episodeSelect.innerHTML = "";
+    for (const ep of data.Episodes) {
+      const opt = document.createElement("option");
+      opt.value = ep.Episode;
+      opt.textContent = `Ep ${ep.Episode}: ${ep.Title}`;
+      episodeSelect.appendChild(opt);
+    }
+  }
+
+  loadDetails();
+</script>
+
 </body>
 </html>
