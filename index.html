@@ -5,7 +5,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="IMDB Streamer">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
 <link rel="apple-touch-icon" href="icon.png"> <!-- Use a 180x180 image -->
   <meta charset="UTF-8">
   <title>IMDB Stream Search</title>
@@ -139,7 +139,7 @@
   #watchlistContainer {
     width: 100vw;
     height: 100vh;
-    right: -100vw;
+    right: -101vw; /* hidden beyond full screen */
     top: 0;
     border-left: none;
     border-top: none;
@@ -160,7 +160,6 @@
     font-size: 16px;
   }
 }
-
   </style>
 </head>
 <body>
