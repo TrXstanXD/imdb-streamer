@@ -139,12 +139,13 @@
   #watchlistContainer {
     width: 100vw;
     height: 100vh;
-    right: -101vw; /* hidden beyond full screen */
+    right: -105vw; /* pushed well beyond visible screen */
     top: 0;
     border-left: none;
     border-top: none;
     transition: right 0.3s ease;
     z-index: 1000;
+    box-shadow: none;
   }
 
   #watchlistContainer.open {
@@ -158,8 +159,14 @@
     border-radius: 6px;
     padding: 10px 16px;
     font-size: 16px;
+    z-index: 1001;
+  }
+
+  body {
+    overflow-x: hidden;
   }
 }
+
   </style>
 </head>
 <body>
