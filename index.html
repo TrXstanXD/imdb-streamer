@@ -175,7 +175,8 @@
       const item = watchlist[id];
       const li = document.createElement("li");
       li.innerHTML = `
-        <strong>${item.title}</strong><br>
+<strong style="color: ${item.watched ? 'limegreen' : 'white'}">${item.title}</strong><br>
+
         <a href="details.html?id=${id}" class="view-btn" style="margin-top: 5px;">View</a>
 ${item.watched ? "✅ Watched" : `<button onclick="markWatched('${id}')" class="view-btn watched">Mark Watched</button>`}
 
