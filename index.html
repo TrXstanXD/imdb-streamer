@@ -131,5 +131,91 @@
       }
     }
   </script>
+  <script>
+  const apiKey = "656d0795";
+  const searchInput = document.getElementById("searchInput");
+  const resultsDiv = document.getElementById("results");
+
+  const featuredIDs = [
+    "tt21032864", // Deadpool & Wolverine
+    "tt20917338", // Inside Out 2
+    "tt14849194", // Despicable Me 4
+    "tt17009710", // A Quiet Place: Day One
+    "tt23289160"  // Happy Gilmore 2 (not real, example placeholder)
+  ];
+
+  let debounceTimeout;
+
+  searchInput.addEventListener("input", () => {
+    clearTimeout(debounceTimeout);
+    debounceTimeout = setTimeout(() => {
+      if (searchInput.value.trim()) {
+        fetchResults(searchInput.value.trim());
+      } else {
+        showFeatured();
+      }
+    }, 500);
+  });
+
+  // Show featured movies on load
+  document.addEventListener("DOMContentLoaded", showFeatured);
+
+  async function showFeatured() {
+    resultsDiv.innerHTML = "";
+    for (const id of featuredIDs) {
+      const res = await fetch(`https://www.omdbapi.com/?apikey=${apiKey}&i=${id}`);
+      const data = await res.json();
+      if (data.Response === "True") {
+        renderResult(data);
+      }
+    }
+  }
+
+  async function fetchResults(query) {
+    const res = await fetch(`https://www.omdbapi.com/?apikey=${apiKey}&s=${encodeURIComponent(query)}`);
+    const data = await res.json();
+
+    resultsDiv.innerHTML = "";
+    if (data.Response === "False") {
+      resultsDiv.innerHTML = `<p>No results found.</p>`;
+      return;
+    }
+
+    for (const item of data.Search) {
+      const resDetail = await fetch(`https://www.omdbapi.com/?apikey=${apiKey}&i=${item.imdbID}`);
+      const fullData = await resDetail.json();
+      if (fullData.Response === "True") {
+        renderResult(fullData);
+      }
+    }
+  }
+
+  function renderResult(data) {
+    const container = document.createElement("div");
+    container.className = "result";
+
+    const poster = document.createElement("img");
+    poster.className = "poster";
+    poster.src = data.Poster !== "N/A" ? data.Poster : "https://via.placeholder.com/100x150?text=No+Image";
+    container.appendChild(poster);
+
+    const info = document.createElement("div");
+    info.className = "info";
+
+    const title = document.createElement("h3");
+    title.textContent = `${data.Title} (${data.Year})`;
+    info.appendChild(title);
+
+    const viewBtn = document.createElement("a");
+    viewBtn.className = "view-btn";
+    viewBtn.href = `details.html?id=${data.imdbID}`;
+    viewBtn.textContent = "View Details";
+    info.appendChild(viewBtn);
+
+    container.appendChild(info);
+    resultsDiv.appendChild(container);
+  }
+</script>
+
 </body>
 </html>
