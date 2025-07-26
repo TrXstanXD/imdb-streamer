@@ -12,6 +12,9 @@
       margin: 0;
       overflow-x: hidden;
     }
+    .watched {
+  background-color: green !important;
+}
     #disclaimer {
       position: fixed;
       top: 20px;
@@ -32,13 +35,13 @@
       margin: 0 auto;
       text-align: center;
     }
-    input[type="text"], input[type="email"], input[type="password"] {
-      width: 250px;
+    input[type="text"] {
+      width: 300px;
       padding: 10px;
       font-size: 16px;
       border-radius: 6px;
       border: none;
-      margin: 5px;
+      margin-bottom: 20px;
     }
     .result {
       margin: 20px auto;
@@ -74,9 +77,6 @@
       display: inline-block;
       cursor: pointer;
     }
-    .watched {
-      background-color: green !important;
-    }
     #watchlistContainer {
       position: fixed;
       top: 0;
@@ -107,6 +107,10 @@
       cursor: pointer;
       z-index: 1001;
     }
+    #watchListItems {
+      list-style: none;
+      padding: 0;
+    }
     .remove-btn {
       background-color: #cc0000;
       color: white;
@@ -119,18 +123,19 @@
   </style>
 </head>
 <body>
+
   <div id="disclaimer">⚠️ DO NOT USE WITHOUT AN ADBLOCKER — POPUPS MAY BE HARMFUL</div>
 
   <div id="main">
     <h1>🎬 IMDB Search to Stream</h1>
     <div id="authArea">
-      <input type="email" id="emailInput" placeholder="Email">
-      <input type="password" id="passwordInput" placeholder="Password">
-      <button onclick="signUp()">Sign Up</button>
-      <button onclick="logIn()">Log In</button>
-      <button onclick="logOut()">Log Out</button>
-      <span id="userStatus" style="margin-left: 10px; color: lightgreen;"></span>
-    </div>
+  <input type="email" id="emailInput" placeholder="Email" style="margin-right:5px;">
+  <input type="password" id="passwordInput" placeholder="Password" style="margin-right:5px;">
+  <button onclick="signUp()">Sign Up</button>
+  <button onclick="logIn()">Log In</button>
+  <button onclick="logOut()">Log Out</button>
+  <span id="userStatus" style="margin-left: 10px; color: lightgreen;"></span>
+</div>
     <input type="text" id="searchInput" placeholder="Search for a movie or show...">
     <div id="results"></div>
   </div>
@@ -141,26 +146,193 @@
     <ul id="watchListItems"></ul>
   </div>
 
-  <footer style="position: fixed; bottom: 10px; left: 50%; transform: translateX(-50%); color: lightgray; font-size: 12px; z-index: 999;">
-    website created by Tristan McBride, video API not by me — I just created the GUI that sends you to SuperEmbed links
-  </footer>
 
-  <!-- Firebase SDK -->
-  <script src="https://www.gstatic.com/firebasejs/10.5.2/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.5.2/firebase-auth.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.5.2/firebase-database.js"></script>
-  <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyAvgoy-Fxuwio3AEE7lprncd_iODXLBT8c",
-      authDomain: "imdbstreamer.firebaseapp.com",
-      projectId: "imdbstreamer",
-      storageBucket: "imdbstreamer.appspot.com",
-      messagingSenderId: "969679453662",
-      appId: "1:969679453662:web:608e0c1200c90ea58fb14f",
-      measurementId: "G-THMCTDKYKZ"
-    };
-    firebase.initializeApp(firebaseConfig);
-  </script>
-  <script src="app.js"></script> <!-- Your original JavaScript logic for watchlist/search/trending -->
+  const apiKey = "656d0795";
+  const searchInput = document.getElementById("searchInput");
+  const resultsDiv = document.getElementById("results");
+
+  const featuredIDs = [
+    "tt6263850", // Deadpool & Wolverine
+    "tt22022452", // Inside Out 2
+    "tt7510222", // Despicable Me 4
+    "tt12584954", // Twisters
+    "tt23468450"  // Longlegs
+  ];
+
+  let debounceTimeout;
+  let trendingHeader;
+
+  const watchlistContainer = document.getElementById("watchlistContainer");
+  const toggleWatchlist = document.getElementById("toggleWatchlist");
+  const watchListItems = document.getElementById("watchListItems");
+
+  const watchlist = JSON.parse(localStorage.getItem("watchlist") || "{}");
+
+  toggleWatchlist.addEventListener("click", () => {
+    watchlistContainer.classList.toggle("open");
+    toggleWatchlist.textContent = watchlistContainer.classList.contains("open") ? "◀️" : "➤";
+  });
+
+  function saveWatchlist() {
+    localStorage.setItem("watchlist", JSON.stringify(watchlist));
+  }
+
+  function updateWatchlistUI() {
+    watchListItems.innerHTML = "";
+    for (const id in watchlist) {
+      const item = watchlist[id];
+      const li = document.createElement("li");
+      li.innerHTML = 
+<strong style="color: ${item.watched ? 'limegreen' : 'white'}">${item.title}</strong><br>
+
+        <a href="details.html?id=${id}" class="view-btn" style="margin-top: 5px;">View</a>
+${item.watched ? "✅ Watched" : <button onclick="markWatched('${id}')" class="view-btn watched">Mark Watched</button>}
+
+        <button class="remove-btn" onclick="removeFromWatchlist('${id}')">Remove</button>
+      ;
+      watchListItems.appendChild(li);
+    }
+  }
+
+function markWatched(id) {
+  if (watchlist[id]) {
+    watchlist[id].watched = true;
+    saveWatchlist();
+    updateWatchlistUI();
+    // Re-color any visible matching titles
+const allResults = document.querySelectorAll(".result");
+allResults.forEach(result => {
+  const viewBtn = result.querySelector(".view-btn");
+  if (viewBtn && viewBtn.href.includes(id)) {
+    const titleElem = result.querySelector("h3");
+    if (titleElem) titleElem.style.color = "limegreen";
+  }
+});
+  }
+}
+
+  function removeFromWatchlist(id) {
+    delete watchlist[id];
+    saveWatchlist();
+    updateWatchlistUI();
+  }
+
+  function addToWatchlist(id, title) {
+    if (!watchlist[id]) {
+      watchlist[id] = { title: title, watched: false };
+      saveWatchlist();
+      updateWatchlistUI();
+    }
+  }
+
+  searchInput.addEventListener("input", () => {
+    clearTimeout(debounceTimeout);
+    debounceTimeout = setTimeout(() => {
+      const query = searchInput.value.trim();
+      if (query) {
+        clearTrendingTitle();
+        fetchResults(query);
+      } else {
+        showFeatured();
+      }
+    }, 500);
+  });
+
+  document.addEventListener("DOMContentLoaded", () => {
+    showFeatured();
+    updateWatchlistUI();
+  });
+
+  function addTrendingTitle() {
+    if (!trendingHeader) {
+      trendingHeader = document.createElement("h2");
+      trendingHeader.textContent = "🔥 Trending Movies";
+      trendingHeader.style.textAlign = "left";
+      trendingHeader.style.margin = "30px auto 10px";
+      trendingHeader.style.maxWidth = "600px";
+      resultsDiv.insertAdjacentElement("beforebegin", trendingHeader);
+    }
+  }
+
+  function clearTrendingTitle() {
+    if (trendingHeader) {
+      trendingHeader.remove();
+      trendingHeader = null;
+    }
+  }
+
+  async function showFeatured() {
+    resultsDiv.innerHTML = "";
+    clearTrendingTitle();
+    addTrendingTitle();
+    for (const id of featuredIDs) {
+      const res = await fetch(https://www.omdbapi.com/?apikey=${apiKey}&i=${id});
+      const data = await res.json();
+      if (data.Response === "True") {
+        renderResult(data);
+      }
+    }
+  }
+
+  async function fetchResults(query) {
+    resultsDiv.innerHTML = "";
+    const res = await fetch(https://www.omdbapi.com/?apikey=${apiKey}&s=${encodeURIComponent(query)});
+    const data = await res.json();
+
+    if (data.Response === "False") {
+      resultsDiv.innerHTML = <p>No results found.</p>;
+      return;
+    }
+
+    for (const item of data.Search) {
+      const resDetail = await fetch(https://www.omdbapi.com/?apikey=${apiKey}&i=${item.imdbID});
+      const fullData = await resDetail.json();
+      if (fullData.Response === "True") {
+        renderResult(fullData);
+      }
+    }
+  }
+
+  function renderResult(data) {
+    const container = document.createElement("div");
+    container.className = "result";
+
+    const poster = document.createElement("img");
+    poster.className = "poster";
+    poster.src = data.Poster !== "N/A" ? data.Poster : "https://via.placeholder.com/100x150?text=No+Image";
+    container.appendChild(poster);
+
+    const info = document.createElement("div");
+    info.className = "info";
+
+    const title = document.createElement("h3");
+const isWatched = watchlist[data.imdbID]?.watched;
+title.textContent = ${data.Title} (${data.Year});
+if (isWatched) title.style.color = "limegreen";
+    info.appendChild(title);
+
+    const viewBtn = document.createElement("a");
+    viewBtn.className = "view-btn";
+    viewBtn.href = details.html?id=${data.imdbID};
+    viewBtn.textContent = "View Details";
+    info.appendChild(viewBtn);
+
+    const addBtn = document.createElement("button");
+    addBtn.className = "view-btn";
+    addBtn.style.marginLeft = "10px";
+    addBtn.textContent = "Add to List";
+    addBtn.onclick = () => addToWatchlist(data.imdbID, ${data.Title} (${data.Year}));
+    info.appendChild(addBtn);
+
+    container.appendChild(info);
+    resultsDiv.appendChild(container);
+  }
+
+  window.markWatched = markWatched;
+  window.removeFromWatchlist = removeFromWatchlist;
+</script>
+<footer style="position: fixed; bottom: 10px; left: 50%; transform: translateX(-50%); color: lightgray; font-size: 12px; z-index: 999;">
+  website created by Tristan McBride, video API not by me — I just created the GUI that sends you to SuperEmbed links
+</footer>
 </body>
 </html>
