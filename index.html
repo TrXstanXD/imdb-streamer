@@ -12,6 +12,9 @@
       margin: 0;
       overflow-x: hidden;
     }
+    .watched {
+  background-color: green !important;
+}
     #disclaimer {
       position: fixed;
       top: 20px;
@@ -174,7 +177,8 @@
       li.innerHTML = `
         <strong>${item.title}</strong><br>
         <a href="details.html?id=${id}" class="view-btn" style="margin-top: 5px;">View</a>
-        ${item.watched ? "✅ Watched" : `<button onclick="markWatched('${id}')">Mark Watched</button>`}
+${item.watched ? "✅ Watched" : `<button onclick="markWatched('${id}')" class="view-btn watched">Mark Watched</button>`}
+
         <button class="remove-btn" onclick="removeFromWatchlist('${id}')">Remove</button>
       `;
       watchListItems.appendChild(li);
