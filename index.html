@@ -373,12 +373,28 @@ ${item.watched ? "✅ Watched" : `<button onclick="markWatched('${id}')" class="
       viewBtn.textContent = "View Details";
       info.appendChild(viewBtn);
 
-      const addBtn = document.createElement("button");
-      addBtn.className = "view-btn";
-      addBtn.style.marginLeft = "10px";
-      addBtn.textContent = "Add to List";
-      addBtn.onclick = () => addToWatchlist(data.imdbID, `${data.Title} (${data.Year})`);
-      info.appendChild(addBtn);
+const addBtn = document.createElement("button");
+addBtn.className = "view-btn";
+addBtn.style.marginLeft = "10px";
+
+function updateAddButton() {
+  const inList = watchlist[data.imdbID];
+  addBtn.innerHTML = inList ? "✅ In List" : "Add to List";
+}
+
+addBtn.onclick = () => {
+  if (watchlist[data.imdbID]) {
+    delete watchlist[data.imdbID];
+  } else {
+    watchlist[data.imdbID] = { title: `${data.Title} (${data.Year})`, watched: false };
+  }
+  saveWatchlist();
+  updateWatchlistUI();
+  updateAddButton();
+};
+
+updateAddButton();
+info.appendChild(addBtn);
 
       container.appendChild(info);
       resultsDiv.appendChild(container);
