@@ -12,6 +12,37 @@
   <link rel="icon" href="favicon.png" type="image/png">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
   <style>
+    #collapsibleContainer {
+  margin: 20px auto;
+  max-width: 800px;
+  text-align: center;
+}
+
+#toggleDescription {
+  background-color: #333;
+  color: #eee;
+  border: none;
+  padding: 10px 16px;
+  font-size: 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+#toggleDescription:hover {
+  background-color: #444;
+}
+
+#descriptionBox {
+  margin-top: 12px;
+  padding: 16px;
+  background-color: #1e1e1e;
+  border-radius: 8px;
+  color: #ccc;
+  font-size: 14px;
+  display: none;
+  text-align: left;
+}
 body {
   background-color: #111;
   color: #eee;
@@ -204,6 +235,12 @@ body {
 
   <div id="main">
     <h1>Queuele (“cue-ell”)</h1>
+    <div id="collapsibleContainer">
+  <button id="toggleDescription">ⓘ About Queuele</button>
+  <div id="descriptionBox">
+    <p><strong>Queuele (“cue-ell”)</strong> is a sleek, user-friendly movie streaming website that lets viewers watch virtually any film they want using IMDb IDs through the SuperEmbed Movie API. Designed with simplicity and accessibility in mind, Queuele offers a curated movie list and seamless streaming experience, all powered by real-time metadata from IMDb. The entire platform was independently developed by Tristan McBride, showcasing a commitment to both functionality and design.</p>
+  </div>
+</div>
     <input type="text" id="searchInput" placeholder="Search for a movie or show...">
     <div id="results"></div>
   </div>
@@ -230,6 +267,11 @@ body {
     const watchListItems = document.getElementById("watchListItems");
     const watchlist = JSON.parse(localStorage.getItem("watchlist") || "{}");
 
+    document.getElementById("toggleDescription").addEventListener("click", () => {
+  const box = document.getElementById("descriptionBox");
+  box.style.display = box.style.display === "none" ? "block" : "none";
+});
+    
     toggleWatchlist.addEventListener("click", () => {
       watchlistContainer.classList.toggle("open");
       toggleWatchlist.textContent = watchlistContainer.classList.contains("open") ? "◀️" : "➤";
