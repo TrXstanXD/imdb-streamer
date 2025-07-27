@@ -34,15 +34,25 @@
 }
 
 #descriptionBox {
-  margin-top: 12px;
-  padding: 16px;
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.4s ease, opacity 0.4s ease;
+  opacity: 0;
+  margin-top: 0;
+  padding: 0 16px;
   background-color: #1e1e1e;
   border-radius: 8px;
   color: #ccc;
   font-size: 14px;
-  display: none;
   text-align: left;
 }
+#descriptionBox.open {
+  opacity: 1;
+  margin-top: 12px;
+  padding: 16px;
+  max-height: 500px;
+}
+
 body {
   background-color: #111;
   color: #eee;
@@ -267,9 +277,8 @@ body {
     const watchListItems = document.getElementById("watchListItems");
     const watchlist = JSON.parse(localStorage.getItem("watchlist") || "{}");
 
-    document.getElementById("toggleDescription").addEventListener("click", () => {
-  const box = document.getElementById("descriptionBox");
-  box.style.display = box.style.display === "none" ? "block" : "none";
+document.getElementById("toggleDescription").addEventListener("click", () => {
+  document.getElementById("descriptionBox").classList.toggle("open");
 });
     
     toggleWatchlist.addEventListener("click", () => {
