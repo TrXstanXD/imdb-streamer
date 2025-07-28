@@ -12,6 +12,23 @@
   <link rel="icon" href="favicon.png" type="image/png">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
   <style>
+    #contactBtn {
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  background-color: #333;
+  color: #fff;
+  padding: 8px 12px;
+  border-radius: 6px;
+  text-decoration: none;
+  font-size: 14px;
+  z-index: 1001;
+  transition: background-color 0.2s;
+}
+#contactBtn:hover {
+  background-color: #444;
+}
+
     #collapsibleContainer {
   margin: 20px auto;
   max-width: 800px;
@@ -454,5 +471,6 @@ info.appendChild(addBtn);
     window.markWatched = markWatched;
     window.removeFromWatchlist = removeFromWatchlist;
   </script>
+  <a href="contact.html" id="contactBtn">Contact</a>
 </body>
 </html>
