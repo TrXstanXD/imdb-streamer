@@ -153,17 +153,10 @@
       }
 
       seasonSelect.addEventListener("change", () => loadEpisodes(seasonSelect.value));
-      episodeSelect.addEventListener("change", () => {
-        const season = seasonSelect.value;
-        const episode = episodeSelect.value;
-        markWatched(season, episode);
-        videoFrame.src = `https://multiembed.mov/directstream.php?video_id=${imdbID}&s=${season}&e=${episode}`;
-        overlay.style.display = "flex";
-      });
-
       watchBtn.addEventListener("click", () => {
         const season = seasonSelect.value;
         const episode = episodeSelect.value;
+        markWatched(season, episode);
         videoFrame.src = `https://multiembed.mov/directstream.php?video_id=${imdbID}&s=${season}&e=${episode}`;
         overlay.style.display = "flex";
       });
@@ -197,7 +190,7 @@
       episodeSelect.appendChild(opt);
     }
 
-    // Reselect previous selection if available
+    // Restore previously selected episode if exists
     if (prevSelected) episodeSelect.value = prevSelected;
   }
 
@@ -219,5 +212,6 @@
 
   loadDetails();
 </script>
+
 </body>
 </html>
