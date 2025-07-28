@@ -155,7 +155,10 @@
 
       seasonSelect.addEventListener("change", () => loadEpisodes(seasonSelect.value));
       episodeSelect.addEventListener("change", () => {
-        videoFrame.src = `https://multiembed.mov/directstream.php?video_id=${imdbID}&s=${seasonSelect.value}&e=${episodeSelect.value}`;
+        const season = seasonSelect.value;
+        const episode = episodeSelect.value;
+        markWatched(season, episode);
+        videoFrame.src = `https://multiembed.mov/directstream.php?video_id=${imdbID}&s=${season}&e=${episode}`;
       });
 
       watchBtn.addEventListener("click", () => {
@@ -174,16 +177,30 @@
     }
   }
 
+  function markWatched(season, episode) {
+    const key = `watched_${imdbID}_S${season}`;
+    const watched = JSON.parse(localStorage.getItem(key) || "[]");
+    const epNum = parseInt(episode);
+    if (!watched.includes(epNum)) {
+      watched.push(epNum);
+      localStorage.setItem(key, JSON.stringify(watched));
+    }
+    loadEpisodes(season); // refresh dropdown with ✅
+  }
+
   async function loadEpisodes(season) {
     const res = await fetch(`https://www.omdbapi.com/?apikey=${apiKey}&i=${imdbID}&season=${season}`);
     const data = await res.json();
     const episodeSelect = document.getElementById("episodeSelect");
+    const watchedKey = `watched_${imdbID}_S${season}`;
+    const watchedEpisodes = JSON.parse(localStorage.getItem(watchedKey) || "[]");
 
     episodeSelect.innerHTML = "";
     for (const ep of data.Episodes) {
       const opt = document.createElement("option");
+      const watched = watchedEpisodes.includes(parseInt(ep.Episode));
       opt.value = ep.Episode;
-      opt.textContent = `Ep ${ep.Episode}: ${ep.Title}`;
+      opt.textContent = `Ep ${ep.Episode}: ${ep.Title}${watched ? " ✅" : ""}`;
       episodeSelect.appendChild(opt);
     }
   }
@@ -195,6 +212,5 @@
 
   loadDetails();
 </script>
-
 </body>
 </html>
