@@ -9,7 +9,7 @@
   <style>
     body {
       background-color: #111;
-      color: #fff;
+      color: #eee;
       font-family: 'Poppins', sans-serif;
       margin: 0;
       padding: 40px 20px;
@@ -17,15 +17,16 @@
     }
 
     h1 {
+      font-size: 36px;
       margin-bottom: 10px;
-      font-size: 32px;
+      font-weight: 600;
     }
 
     p {
       color: #aaa;
+      font-size: 16px;
       max-width: 600px;
       margin: 0 auto 30px;
-      font-size: 16px;
     }
 
     .link-buttons {
@@ -33,25 +34,31 @@
       flex-direction: column;
       align-items: center;
       gap: 15px;
+      margin-top: 30px;
     }
 
     .link-button {
       display: flex;
       align-items: center;
-      gap: 10px;
-      padding: 12px 20px;
-      background-color: #222;
+      justify-content: center;
+      gap: 12px;
+      padding: 14px 22px;
+      background-color: #1c1c1c;
       border: 1px solid #333;
-      border-radius: 8px;
+      border-radius: 10px;
       text-decoration: none;
       color: #fff;
-      width: 280px;
+      width: 320px;
       font-size: 16px;
-      transition: background 0.2s;
+      font-weight: 500;
+      transition: all 0.2s ease-in-out;
+      box-shadow: 0 0 5px #000;
     }
 
     .link-button:hover {
-      background-color: #333;
+      background-color: #2a2a2a;
+      box-shadow: 0 0 10px #0af5;
+      transform: translateY(-2px);
     }
 
     .link-button img {
@@ -61,19 +68,21 @@
 
     .contact-container {
       max-width: 600px;
-      margin: 50px auto 0;
+      margin: 60px auto 0;
       background: #222;
       padding: 30px;
-      border-radius: 12px;
+      border-radius: 14px;
+      box-shadow: 0 0 10px #000;
     }
 
     .contact-container h1 {
+      font-size: 28px;
       margin-bottom: 20px;
     }
 
     .info {
       font-size: 16px;
-      margin: 10px 0;
+      margin: 12px 0;
     }
 
     .info a {
@@ -86,9 +95,15 @@
     }
 
     footer {
-      margin-top: 40px;
+      margin-top: 50px;
       font-size: 14px;
       color: #555;
+    }
+
+    @media (max-width: 400px) {
+      .link-button {
+        width: 90%;
+      }
     }
   </style>
 </head>
@@ -104,23 +119,15 @@
     </a>
     <a class="link-button" href="https://trxstanxd.github.io/ai-queue" target="_blank">
       <img src="icons/aiqueue.png" alt="AI Queue">
-      AI Youtube Playlist
+      AI YouTube Playlist
     </a>
     <a class="link-button" href="https://trxstanxd.github.io/yt-queue" target="_blank">
       <img src="icons/ytqueue.png" alt="YTQueue">
-      YTQueue (YouTube Playlist Maker)
+      YTQueue
     </a>
     <a class="link-button" href="https://github.com/TrXstanXD" target="_blank">
       <img src="icons/github.png" alt="GitHub">
       GitHub Profile
-    </a>
-    <a class="link-button" href="mailto:tristanmcbride@queuele.com">
-      <img src="icons/email.png" alt="Email">
-      Email Me
-    </a>
-        <a class="link-button" href="https://x.com/tristanm5281">
-      <img src="icons/twitter.png" alt="Twitter">
-      Twitter
     </a>
   </div>
 
