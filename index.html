@@ -2,11 +2,11 @@
 <html lang="en">
 <head>
   <!-- iOS App Mode -->
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Queuele">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
-<link rel="apple-touch-icon" href="icon.png"> <!-- Use a 180x180 image -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Queuele">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
+  <link rel="apple-touch-icon" href="icon.png">
   <meta charset="UTF-8">
   <title>Queuele (“cue-ell”)</title>
   <link rel="icon" href="favicon.png" type="image/png">
@@ -255,11 +255,45 @@ body {
   }
 }
 
+        #exportImportControls {
+      margin-top: 20px;
+    }
+    #exportImportControls input {
+      width: 80%;
+      margin: 5px auto;
+      padding: 8px;
+      border-radius: 6px;
+      border: none;
+      font-size: 14px;
+      display: block;
+    }
+    #exportImportControls button {
+      padding: 8px;
+      font-size: 14px;
+      border-radius: 6px;
+      border: none;
+      background-color: #444;
+      color: white;
+      margin-top: 5px;
+      cursor: pointer;
+    }
+    #exportImportControls button:hover {
+      background-color: #555;
+    }
   </style>
 </head>
 <body>
   <div id="disclaimer">⚠️ DO NOT USE WITHOUT AN ADBLOCKER — POPUPS MAY BE HARMFUL</div>
-
+  
+  <div id="watchlistContainer">
+    <h2>Your Watch List</h2>
+    <ul id="watchListItems"></ul>
+    <div id="exportImportControls">
+      <button onclick="exportWatchlist()">Export Watchlist</button>
+      <input type="text" id="importCode" placeholder="Enter code to import">
+      <button onclick="importWatchlist()">Import</button>
+    </div>
+  </div>
   <div id="main">
     <h1>Queuele (“cue-ell”)</h1>
     <div id="collapsibleContainer">
@@ -270,12 +304,6 @@ body {
 </div>
     <input type="text" id="searchInput" placeholder="Search for a movie or show...">
     <div id="results"></div>
-  </div>
-
-  <button id="toggleWatchlist">➤</button>
-  <div id="watchlistContainer">
-    <h2>Your Watch List</h2>
-    <ul id="watchListItems"></ul>
   </div>
 
   <footer style="position: fixed; bottom: 10px; left: 50%; transform: translateX(-50%); color: lightgray; font-size: 12px; z-index: 999;">
@@ -449,6 +477,34 @@ function updateAddButton() {
   const inList = watchlist[data.imdbID];
   addBtn.innerHTML = inList ? "✅ In List" : "Add to List";
 }
+    function generateCode() {
+      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+      let result = '';
+      for (let i = 0; i < 8; i++) {
+        result += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+      return result;
+    }
+
+    function exportWatchlist() {
+      const code = generateCode();
+      localStorage.setItem("watchlist_export_" + code, JSON.stringify(watchlist));
+      prompt("Copy this code to import on another device:", code);
+    }
+
+    function importWatchlist() {
+      const code = document.getElementById("importCode").value.trim();
+      if (!code) return alert("Please enter a valid code.");
+      const imported = localStorage.getItem("watchlist_export_" + code);
+      if (imported) {
+        Object.assign(watchlist, JSON.parse(imported));
+        saveWatchlist();
+        updateWatchlistUI();
+        alert("Watchlist imported!");
+      } else {
+        alert("Invalid or expired code.");
+      }
+    }
 
 addBtn.onclick = () => {
   if (watchlist[data.imdbID]) {
