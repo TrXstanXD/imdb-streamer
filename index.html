@@ -2,11 +2,11 @@
 <html lang="en">
 <head>
   <!-- iOS App Mode -->
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Queuele">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
-<link rel="apple-touch-icon" href="icon.png"> <!-- Use a 180x180 image -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Queuele">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
+  <link rel="apple-touch-icon" href="icon.png">
   <meta charset="UTF-8">
   <title>Queuele (“cue-ell”)</title>
   <link rel="icon" href="favicon.png" type="image/png">
@@ -259,29 +259,25 @@ body {
 </head>
 <body>
   <div id="disclaimer">⚠️ DO NOT USE WITHOUT AN ADBLOCKER — POPUPS MAY BE HARMFUL</div>
-
   <div id="main">
     <h1>Queuele (“cue-ell”)</h1>
     <div id="collapsibleContainer">
-  <button id="toggleDescription">ⓘ About Queuele</button>
-  <div id="descriptionBox">
-    <p><strong>Queuele (“cue-ell”)</strong> is a sleek, user-friendly movie streaming website that lets viewers watch virtually any film they want using IMDb IDs through the SuperEmbed Movie API. Designed with simplicity and accessibility in mind, Queuele offers a curated movie list and seamless streaming experience, all powered by real-time metadata from IMDb. The entire platform was independently developed by Tristan McBride, showcasing a commitment to both functionality and design. Also, this website is an app. If you're on your phone, just press the add to homescreen button. Share, (more,) add to homescreen.</p>
-  </div>
-</div>
+      <button id="toggleDescription">ⓘ About Queuele</button>
+      <div id="descriptionBox">
+        <p><strong>Queuele (“cue-ell”)</strong> is a sleek, user-friendly movie streaming website that lets viewers watch virtually any film they want using IMDb IDs through the SuperEmbed Movie API...</p>
+      </div>
+    </div>
     <input type="text" id="searchInput" placeholder="Search for a movie or show...">
     <div id="results"></div>
   </div>
-
   <button id="toggleWatchlist">➤</button>
   <div id="watchlistContainer">
     <h2>Your Watch List</h2>
     <ul id="watchListItems"></ul>
   </div>
-
   <footer style="position: fixed; bottom: 10px; left: 50%; transform: translateX(-50%); color: lightgray; font-size: 12px; z-index: 999;">
     website created by Tristan McBride, using SuperEmbed video API.
   </footer>
-
   <script>
     const apiKey = "656d0795";
     const searchInput = document.getElementById("searchInput");
@@ -294,10 +290,10 @@ body {
     const watchListItems = document.getElementById("watchListItems");
     const watchlist = JSON.parse(localStorage.getItem("watchlist") || "{}");
 
-document.getElementById("toggleDescription").addEventListener("click", () => {
-  document.getElementById("descriptionBox").classList.toggle("open");
-});
-    
+    document.getElementById("toggleDescription").addEventListener("click", () => {
+      document.getElementById("descriptionBox").classList.toggle("open");
+    });
+
     toggleWatchlist.addEventListener("click", () => {
       watchlistContainer.classList.toggle("open");
       toggleWatchlist.textContent = watchlistContainer.classList.contains("open") ? "◀️" : "➤";
@@ -312,11 +308,12 @@ document.getElementById("toggleDescription").addEventListener("click", () => {
       for (const id in watchlist) {
         const item = watchlist[id];
         const li = document.createElement("li");
-        li.innerHTML = 
-<strong style="color: ${item.watched ? 'limegreen' : 'white'}">${item.title}</strong><br>
-<a href="details.html?id=${id}" class="view-btn" style="margin-top: 5px;">View</a>
-${item.watched ? "✅ Watched" : <button onclick="markWatched('${id}')" class="view-btn watched">Mark Watched</button>}
-<button class="remove-btn" onclick="removeFromWatchlist('${id}')">Remove</button>;
+        li.innerHTML = `
+          <strong style="color: ${item.watched ? 'limegreen' : 'white'}">${item.title}</strong><br>
+          <a href="details.html?id=${id}" class="view-btn" style="margin-top: 5px;">View</a>
+          ${item.watched ? "✅ Watched" : `<button onclick="markWatched('${id}')" class="view-btn watched">Mark Watched</button>`}
+          <button class="remove-btn" onclick="removeFromWatchlist('${id}')">Remove</button>
+        `;
         watchListItems.appendChild(li);
       }
     }
@@ -392,7 +389,7 @@ ${item.watched ? "✅ Watched" : <button onclick="markWatched('${id}')" class="v
       clearTrendingTitle();
       addTrendingTitle();
       for (const id of featuredIDs) {
-        const res = await fetch(https://www.omdbapi.com/?apikey=${apiKey}&i=${id});
+        const res = await fetch(`https://www.omdbapi.com/?apikey=${apiKey}&i=${id}`);
         const data = await res.json();
         if (data.Response === "True") {
           renderResult(data);
@@ -402,14 +399,14 @@ ${item.watched ? "✅ Watched" : <button onclick="markWatched('${id}')" class="v
 
     async function fetchResults(query) {
       resultsDiv.innerHTML = "";
-      const res = await fetch(https://www.omdbapi.com/?apikey=${apiKey}&s=${encodeURIComponent(query)});
+      const res = await fetch(`https://www.omdbapi.com/?apikey=${apiKey}&s=${encodeURIComponent(query)}`);
       const data = await res.json();
       if (data.Response === "False") {
-        resultsDiv.innerHTML = <p>No results found.</p>;
+        resultsDiv.innerHTML = `<p>No results found.</p>`;
         return;
       }
       for (const item of data.Search) {
-        const resDetail = await fetch(https://www.omdbapi.com/?apikey=${apiKey}&i=${item.imdbID});
+        const resDetail = await fetch(`https://www.omdbapi.com/?apikey=${apiKey}&i=${item.imdbID}`);
         const fullData = await resDetail.json();
         if (fullData.Response === "True") {
           renderResult(fullData);
@@ -431,39 +428,38 @@ ${item.watched ? "✅ Watched" : <button onclick="markWatched('${id}')" class="v
 
       const title = document.createElement("h3");
       const isWatched = watchlist[data.imdbID]?.watched;
-      title.textContent = ${data.Title} (${data.Year});
+      title.textContent = `${data.Title} (${data.Year})`;
       if (isWatched) title.style.color = "limegreen";
       info.appendChild(title);
 
       const viewBtn = document.createElement("a");
       viewBtn.className = "view-btn";
-      viewBtn.href = details.html?id=${data.imdbID};
+      viewBtn.href = `details.html?id=${data.imdbID}`;
       viewBtn.textContent = "View Details";
       info.appendChild(viewBtn);
 
-const addBtn = document.createElement("button");
-addBtn.className = "view-btn";
-addBtn.style.marginLeft = "10px";
+      const addBtn = document.createElement("button");
+      addBtn.className = "view-btn";
+      addBtn.style.marginLeft = "10px";
 
-function updateAddButton() {
-  const inList = watchlist[data.imdbID];
-  addBtn.innerHTML = inList ? "✅ In List" : "Add to List";
-}
+      function updateAddButton() {
+        const inList = watchlist[data.imdbID];
+        addBtn.innerHTML = inList ? "✅ In List" : "Add to List";
+      }
 
-addBtn.onclick = () => {
-  if (watchlist[data.imdbID]) {
-    delete watchlist[data.imdbID];
-  } else {
-    watchlist[data.imdbID] = { title: ${data.Title} (${data.Year}), watched: false };
-  }
-  saveWatchlist();
-  updateWatchlistUI();
-  updateAddButton();
-};
+      addBtn.onclick = () => {
+        if (watchlist[data.imdbID]) {
+          delete watchlist[data.imdbID];
+        } else {
+          watchlist[data.imdbID] = { title: `${data.Title} (${data.Year})`, watched: false };
+        }
+        saveWatchlist();
+        updateWatchlistUI();
+        updateAddButton();
+      };
 
-updateAddButton();
-info.appendChild(addBtn);
-
+      updateAddButton();
+      info.appendChild(addBtn);
       container.appendChild(info);
       resultsDiv.appendChild(container);
     }
