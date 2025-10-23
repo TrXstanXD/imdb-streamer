@@ -107,111 +107,130 @@
   <div id="warning">⚠️ If popups appear, close them immediately. Use an ad blocker if possible.</div>
 </div>
 <script>
-  const apiKey = "656d0795";
-  const urlParams = new URLSearchParams(window.location.search);
-  const imdbID = urlParams.get("id");
-  const container = document.getElementById("container");
-  const overlay = document.getElementById("videoOverlay");
-  const videoFrame = document.getElementById("videoFrame");
-  const closeBtn = document.getElementById("closeBtn");
+  var apiKey = "656d0795";
+  var urlParams = new URLSearchParams(window.location.search);
+  var imdbID = urlParams.get("id");
+  var container = document.getElementById("container");
+  var overlay = document.getElementById("videoOverlay");
+  var videoFrame = document.getElementById("videoFrame");
+  var closeBtn = document.getElementById("closeBtn");
 
-  async function loadDetails() {
-    const res = await fetch(`https://www.omdbapi.com/?apikey=${apiKey}&i=${imdbID}&plot=full`);
-    const data = await res.json();
-    const isSeries = data.Type === "series";
+  function loadDetails() {
+    fetch("https://www.omdbapi.com/?apikey=" + apiKey + "&i=" + imdbID + "&plot=full")
+      .then(function(res) { return res.json(); })
+      .then(function(data) {
+        var isSeries = data.Type === "series";
 
-    let html = `
-      <img src="${data.Poster !== "N/A" ? data.Poster : "https://via.placeholder.com/100x150?text=No+Image"}" alt="Poster">
-      <h1>${data.Title} (${data.Year})</h1>
-      <p>${data.Plot}</p>
-    `;
+        var html = ''
+          + '<img src="' + (data.Poster !== "N/A" ? data.Poster : "https://via.placeholder.com/100x150?text=No+Image") + '" alt="Poster">'
+          + '<h1>' + data.Title + ' (' + data.Year + ')</h1>'
+          + '<p>' + data.Plot + '</p>';
 
-    if (isSeries) {
-      html += `
-        <select id="seasonSelect"></select>
-        <select id="episodeSelect"></select>
-        <br>
-        <button class="watch-btn" id="watchBtn">▶️ Watch</button>
-      `;
-    } else {
-      html += `<button class="watch-btn" id="watchBtn">▶️ Watch</button>`;
-    }
+        if (isSeries) {
+          html += '<select id="seasonSelect"></select>'
+               + '<select id="episodeSelect"></select><br>'
+               + '<button class="watch-btn" id="watchBtn">▶️ Watch</button>';
+        } else {
+          html += '<button class="watch-btn" id="watchBtn">▶️ Watch</button>';
+        }
 
-    container.innerHTML = html;
+        container.innerHTML = html;
 
-    const watchBtn = document.getElementById("watchBtn");
+        var watchBtn = document.getElementById("watchBtn");
 
-    if (isSeries) {
-      const seasonSelect = document.getElementById("seasonSelect");
-      const episodeSelect = document.getElementById("episodeSelect");
+        if (isSeries) {
+          var seasonSelect = document.getElementById("seasonSelect");
+          var episodeSelect = document.getElementById("episodeSelect");
 
-      for (let i = 1; i <= parseInt(data.totalSeasons); i++) {
-        const opt = document.createElement("option");
-        opt.value = i;
-        opt.textContent = `Season ${i}`;
-        seasonSelect.appendChild(opt);
-      }
+          for (var i = 1; i <= parseInt(data.totalSeasons); i++) {
+            var opt = document.createElement("option");
+            opt.value = i;
+            opt.textContent = "Season " + i;
+            seasonSelect.appendChild(opt);
+          }
 
-      seasonSelect.addEventListener("change", () => loadEpisodes(seasonSelect.value));
-      watchBtn.addEventListener("click", () => {
-        const season = seasonSelect.value;
-        const episode = episodeSelect.value;
-        markWatched(season, episode);
-        videoFrame.src = `https://multiembed.mov/directstream.php?video_id=${imdbID}&s=${season}&e=${episode}`;
-        overlay.style.display = "flex";
+          seasonSelect.addEventListener("change", function() {
+            loadEpisodes(seasonSelect.value);
+          });
+
+          watchBtn.addEventListener("click", function() {
+            var season = seasonSelect.value;
+            var episode = episodeSelect.value;
+            markWatched(season, episode);
+            videoFrame.src = "https://multiembed.mov/directstream.php?video_id=" + imdbID + "&s=" + season + "&e=" + episode;
+            overlay.style.display = "flex";
+          });
+
+          loadEpisodes(1);
+        } else {
+          watchBtn.addEventListener("click", function() {
+            videoFrame.src = "https://multiembed.mov/directstream.php?video_id=" + imdbID;
+            overlay.style.display = "flex";
+          });
+        }
       });
-
-      await loadEpisodes(1);
-    } else {
-      watchBtn.addEventListener("click", () => {
-        videoFrame.src = `https://multiembed.mov/directstream.php?video_id=${imdbID}`;
-        overlay.style.display = "flex";
-      });
-    }
   }
 
-  async function loadEpisodes(season) {
-    const res = await fetch(`https://www.omdbapi.com/?apikey=${apiKey}&i=${imdbID}&season=${season}`);
-    const data = await res.json();
-    const episodeSelect = document.getElementById("episodeSelect");
+  function loadEpisodes(season) {
+    fetch("https://www.omdbapi.com/?apikey=" + apiKey + "&i=" + imdbID + "&season=" + season)
+      .then(function(res) { return res.json(); })
+      .then(function(data) {
+        var episodeSelect = document.getElementById("episodeSelect");
+        var watchedKey = "watched_" + imdbID + "_S" + season;
+        var watchedEpisodes = [];
 
-    const watchedKey = `watched_${imdbID}_S${season}`;
-    const watchedEpisodes = JSON.parse(localStorage.getItem(watchedKey) || "[]");
+        try {
+          watchedEpisodes = JSON.parse(localStorage.getItem(watchedKey) || "[]");
+        } catch (e) {}
 
-    const prevSelected = episodeSelect.value;
+        var prevSelected = episodeSelect.value;
+        episodeSelect.innerHTML = "";
 
-    episodeSelect.innerHTML = "";
-    for (const ep of data.Episodes) {
-      const opt = document.createElement("option");
-      const epNum = parseInt(ep.Episode);
-      const watched = watchedEpisodes.includes(epNum);
-      opt.value = epNum;
-      opt.textContent = `Ep ${ep.Episode}: ${ep.Title}${watched ? " ✅" : ""}`;
-      episodeSelect.appendChild(opt);
-    }
+        if (data && data.Episodes && data.Episodes.length > 0) {
+          for (var i = 0; i < data.Episodes.length; i++) {
+            var ep = data.Episodes[i];
+            var opt = document.createElement("option");
+            var epNum = parseInt(ep.Episode);
+            var watched = watchedEpisodes.indexOf(epNum) !== -1;
+            opt.value = epNum;
+            opt.textContent = "Ep " + ep.Episode + ": " + ep.Title + (watched ? " ✅" : "");
+            episodeSelect.appendChild(opt);
+          }
 
-    // Restore previously selected episode if exists
-    if (prevSelected) episodeSelect.value = prevSelected;
+          if (prevSelected) episodeSelect.value = prevSelected;
+        } else {
+          var opt = document.createElement("option");
+          opt.textContent = "No options";
+          episodeSelect.appendChild(opt);
+        }
+      })
+      .catch(function(err) {
+        console.log("Error loading episodes:", err);
+      });
   }
 
   function markWatched(season, episode) {
-    const key = `watched_${imdbID}_S${season}`;
-    const watched = JSON.parse(localStorage.getItem(key) || "[]");
-    const epNum = parseInt(episode);
-    if (!watched.includes(epNum)) {
+    var key = "watched_" + imdbID + "_S" + season;
+    var watched = [];
+    try {
+      watched = JSON.parse(localStorage.getItem(key) || "[]");
+    } catch (e) {}
+    var epNum = parseInt(episode);
+    if (watched.indexOf(epNum) === -1) {
       watched.push(epNum);
       localStorage.setItem(key, JSON.stringify(watched));
     }
     loadEpisodes(season);
   }
 
-  closeBtn.addEventListener("click", () => {
+  closeBtn.addEventListener("click", function() {
     videoFrame.src = "";
     overlay.style.display = "none";
   });
 
   loadDetails();
 </script>
+
 
 </body>
 </html>
