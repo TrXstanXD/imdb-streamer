@@ -258,6 +258,15 @@ body {
   </style>
 </head>
 <body>
+  <!-- Polyfills for older browsers (like iOS 12 Safari) -->
+<script src="https://cdn.jsdelivr.net/npm/core-js-bundle/minified.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/whatwg-fetch/dist/fetch.umd.js"></script>
+<script>
+  // Polyfill for Object.entries, Promise, etc. if needed
+  if (!window.Promise) {
+    document.write('<script src="https://cdn.jsdelivr.net/npm/es6-promise/dist/es6-promise.auto.min.js"><\/script>');
+  }
+</script>
   <div id="disclaimer">⚠️ DO NOT USE WITHOUT AN ADBLOCKER — POPUPS MAY BE HARMFUL</div>
   <div id="main">
     <h1>Queuele (“cue-ell”)</h1>
