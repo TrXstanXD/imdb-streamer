@@ -393,18 +393,18 @@ body {
       }
     }
 
-    async function showFeatured() {
-      resultsDiv.innerHTML = "";
-      clearTrendingTitle();
-      addTrendingTitle();
-      for (const id of featuredIDs) {
-        const res = await fetch(`https://www.omdbapi.com/?apikey=${apiKey}&i=${id}`);
-        const data = await res.json();
-        if (data.Response === "True") {
-          renderResult(data);
-        }
-      }
-    }
+function showFeatured() {
+  resultsDiv.innerHTML = "";
+  clearTrendingTitle();
+  addTrendingTitle();
+  featuredIDs.forEach(function (id) {
+    fetch("https://www.omdbapi.com/?apikey=" + apiKey + "&i=" + id)
+      .then(res => res.json())
+      .then(function (data) {
+        if (data.Response === "True") renderResult(data);
+      });
+  });
+}
 
     async function fetchResults(query) {
       resultsDiv.innerHTML = "";
