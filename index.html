@@ -287,195 +287,212 @@ body {
   <footer style="position: fixed; bottom: 10px; left: 50%; transform: translateX(-50%); color: lightgray; font-size: 12px; z-index: 999;">
     website created by Tristan McBride, using SuperEmbed video API.
   </footer>
-  <script>
-    const apiKey = "656d0795";
-    const searchInput = document.getElementById("searchInput");
-    const resultsDiv = document.getElementById("results");
-    const featuredIDs = ["tt2861424", "tt11280740", "tt4508902", "tt0773262", "tt31868189"];
-    let debounceTimeout;
-    let trendingHeader;
-    const watchlistContainer = document.getElementById("watchlistContainer");
-    const toggleWatchlist = document.getElementById("toggleWatchlist");
-    const watchListItems = document.getElementById("watchListItems");
-    const watchlist = JSON.parse(localStorage.getItem("watchlist") || "{}");
+<script>
+  var apiKey = "656d0795";
+  var searchInput = document.getElementById("searchInput");
+  var resultsDiv = document.getElementById("results");
+  var featuredIDs = ["tt2861424", "tt11280740", "tt4508902", "tt0773262", "tt31868189"];
+  var debounceTimeout;
+  var trendingHeader;
+  var watchlistContainer = document.getElementById("watchlistContainer");
+  var toggleWatchlist = document.getElementById("toggleWatchlist");
+  var watchListItems = document.getElementById("watchListItems");
+  var watchlist = {};
 
-    document.getElementById("toggleDescription").addEventListener("click", () => {
-      document.getElementById("descriptionBox").classList.toggle("open");
-    });
+  try {
+    watchlist = JSON.parse(localStorage.getItem("watchlist") || "{}");
+  } catch (e) {
+    watchlist = {};
+  }
 
-    toggleWatchlist.addEventListener("click", () => {
-      watchlistContainer.classList.toggle("open");
-      toggleWatchlist.textContent = watchlistContainer.classList.contains("open") ? "◀️" : "➤";
-    });
+  document.getElementById("toggleDescription").addEventListener("click", function() {
+    document.getElementById("descriptionBox").classList.toggle("open");
+  });
 
-    function saveWatchlist() {
+  toggleWatchlist.addEventListener("click", function() {
+    watchlistContainer.classList.toggle("open");
+    toggleWatchlist.textContent = watchlistContainer.classList.contains("open") ? "◀️" : "➤";
+  });
+
+  function saveWatchlist() {
+    try {
       localStorage.setItem("watchlist", JSON.stringify(watchlist));
-    }
+    } catch (e) {}
+  }
 
-    function updateWatchlistUI() {
-      watchListItems.innerHTML = "";
-      for (const id in watchlist) {
-        const item = watchlist[id];
-        const li = document.createElement("li");
-        li.innerHTML = `
-          <strong style="color: ${item.watched ? 'limegreen' : 'white'}">${item.title}</strong><br>
-          <a href="details.html?id=${id}" class="view-btn" style="margin-top: 5px;">View</a>
-          ${item.watched ? "✅ Watched" : `<button onclick="markWatched('${id}')" class="view-btn watched">Mark Watched</button>`}
-          <button class="remove-btn" onclick="removeFromWatchlist('${id}')">Remove</button>
-        `;
-        watchListItems.appendChild(li);
+  function updateWatchlistUI() {
+    watchListItems.innerHTML = "";
+    for (var id in watchlist) {
+      if (!watchlist.hasOwnProperty(id)) continue;
+      var item = watchlist[id];
+      var li = document.createElement("li");
+      li.innerHTML =
+        '<strong style="color:' + (item.watched ? 'limegreen' : 'white') + '">' + item.title + '</strong><br>' +
+        '<a href="details.html?id=' + id + '" class="view-btn" style="margin-top:5px;">View</a> ' +
+        (item.watched ? "✅ Watched" : '<button onclick="markWatched(\'' + id + '\')" class="view-btn watched">Mark Watched</button>') +
+        ' <button class="remove-btn" onclick="removeFromWatchlist(\'' + id + '\')">Remove</button>';
+      watchListItems.appendChild(li);
+    }
+  }
+
+  function markWatched(id) {
+    if (watchlist[id]) {
+      watchlist[id].watched = true;
+      saveWatchlist();
+      updateWatchlistUI();
+      var allResults = document.querySelectorAll(".result");
+      for (var i = 0; i < allResults.length; i++) {
+        var result = allResults[i];
+        var viewBtn = result.querySelector(".view-btn");
+        if (viewBtn && viewBtn.href.indexOf(id) !== -1) {
+          var titleElem = result.querySelector("h3");
+          if (titleElem) titleElem.style.color = "limegreen";
+        }
       }
     }
+  }
 
-    function markWatched(id) {
-      if (watchlist[id]) {
-        watchlist[id].watched = true;
-        saveWatchlist();
-        updateWatchlistUI();
-        const allResults = document.querySelectorAll(".result");
-        allResults.forEach(result => {
-          const viewBtn = result.querySelector(".view-btn");
-          if (viewBtn && viewBtn.href.includes(id)) {
-            const titleElem = result.querySelector("h3");
-            if (titleElem) titleElem.style.color = "limegreen";
-          }
-        });
-      }
-    }
+  function removeFromWatchlist(id) {
+    delete watchlist[id];
+    saveWatchlist();
+    updateWatchlistUI();
+  }
 
-    function removeFromWatchlist(id) {
-      delete watchlist[id];
+  function addToWatchlist(id, title) {
+    if (!watchlist[id]) {
+      watchlist[id] = { title: title, watched: false };
       saveWatchlist();
       updateWatchlistUI();
     }
+  }
 
-    function addToWatchlist(id, title) {
-      if (!watchlist[id]) {
-        watchlist[id] = { title: title, watched: false };
-        saveWatchlist();
-        updateWatchlistUI();
+  searchInput.addEventListener("input", function() {
+    clearTimeout(debounceTimeout);
+    debounceTimeout = setTimeout(function() {
+      var query = searchInput.value.trim();
+      if (query) {
+        clearTrendingTitle();
+        fetchResults(query);
+      } else {
+        showFeatured();
       }
-    }
-
-    searchInput.addEventListener("input", () => {
-      clearTimeout(debounceTimeout);
-      debounceTimeout = setTimeout(() => {
-        const query = searchInput.value.trim();
-        if (query) {
-          clearTrendingTitle();
-          fetchResults(query);
-        } else {
-          showFeatured();
-        }
-      }, 500);
-    });
-
-    document.addEventListener("DOMContentLoaded", () => {
-      showFeatured();
-      updateWatchlistUI();
-    });
-
-    function addTrendingTitle() {
-      if (!trendingHeader) {
-        trendingHeader = document.createElement("h2");
-        trendingHeader.textContent = "🔥 Tristan's Top 5";
-        trendingHeader.style.textAlign = "left";
-        trendingHeader.style.margin = "30px auto 10px";
-        trendingHeader.style.maxWidth = "600px";
-        resultsDiv.insertAdjacentElement("beforebegin", trendingHeader);
-      }
-    }
-
-    function clearTrendingTitle() {
-      if (trendingHeader) {
-        trendingHeader.remove();
-        trendingHeader = null;
-      }
-    }
-
-function showFeatured() {
-  resultsDiv.innerHTML = "";
-  clearTrendingTitle();
-  addTrendingTitle();
-  featuredIDs.forEach(function (id) {
-    fetch("https://www.omdbapi.com/?apikey=" + apiKey + "&i=" + id)
-      .then(res => res.json())
-      .then(function (data) {
-        if (data.Response === "True") renderResult(data);
-      });
+    }, 500);
   });
-}
 
-    async function fetchResults(query) {
-      resultsDiv.innerHTML = "";
-      const res = await fetch(`https://www.omdbapi.com/?apikey=${apiKey}&s=${encodeURIComponent(query)}`);
-      const data = await res.json();
-      if (data.Response === "False") {
-        resultsDiv.innerHTML = `<p>No results found.</p>`;
-        return;
-      }
-      for (const item of data.Search) {
-        const resDetail = await fetch(`https://www.omdbapi.com/?apikey=${apiKey}&i=${item.imdbID}`);
-        const fullData = await resDetail.json();
-        if (fullData.Response === "True") {
-          renderResult(fullData);
+  document.addEventListener("DOMContentLoaded", function() {
+    showFeatured();
+    updateWatchlistUI();
+  });
+
+  function addTrendingTitle() {
+    if (!trendingHeader) {
+      trendingHeader = document.createElement("h2");
+      trendingHeader.textContent = "🔥 Tristan's Top 5";
+      trendingHeader.style.textAlign = "left";
+      trendingHeader.style.margin = "30px auto 10px";
+      trendingHeader.style.maxWidth = "600px";
+      resultsDiv.parentNode.insertBefore(trendingHeader, resultsDiv);
+    }
+  }
+
+  function clearTrendingTitle() {
+    if (trendingHeader) {
+      trendingHeader.parentNode.removeChild(trendingHeader);
+      trendingHeader = null;
+    }
+  }
+
+  function showFeatured() {
+    resultsDiv.innerHTML = "";
+    clearTrendingTitle();
+    addTrendingTitle();
+    for (var i = 0; i < featuredIDs.length; i++) {
+      (function(id) {
+        fetch("https://www.omdbapi.com/?apikey=" + apiKey + "&i=" + id)
+          .then(function(res) { return res.json(); })
+          .then(function(data) {
+            if (data.Response === "True") renderResult(data);
+          })
+          .catch(function(e) { console.log(e); });
+      })(featuredIDs[i]);
+    }
+  }
+
+  function fetchResults(query) {
+    resultsDiv.innerHTML = "";
+    fetch("https://www.omdbapi.com/?apikey=" + apiKey + "&s=" + encodeURIComponent(query))
+      .then(function(res) { return res.json(); })
+      .then(function(data) {
+        if (data.Response === "False") {
+          resultsDiv.innerHTML = "<p>No results found.</p>";
+          return;
         }
-      }
+        for (var i = 0; i < data.Search.length; i++) {
+          (function(item) {
+            fetch("https://www.omdbapi.com/?apikey=" + apiKey + "&i=" + item.imdbID)
+              .then(function(res) { return res.json(); })
+              .then(function(fullData) {
+                if (fullData.Response === "True") renderResult(fullData);
+              });
+          })(data.Search[i]);
+        }
+      });
+  }
+
+  function renderResult(data) {
+    var container = document.createElement("div");
+    container.className = "result";
+
+    var poster = document.createElement("img");
+    poster.className = "poster";
+    poster.src = data.Poster !== "N/A" ? data.Poster : "https://via.placeholder.com/100x150?text=No+Image";
+    container.appendChild(poster);
+
+    var info = document.createElement("div");
+    info.className = "info";
+
+    var title = document.createElement("h3");
+    var isWatched = watchlist[data.imdbID] && watchlist[data.imdbID].watched;
+    title.textContent = data.Title + " (" + data.Year + ")";
+    if (isWatched) title.style.color = "limegreen";
+    info.appendChild(title);
+
+    var viewBtn = document.createElement("a");
+    viewBtn.className = "view-btn";
+    viewBtn.href = "details.html?id=" + data.imdbID;
+    viewBtn.textContent = "View Details";
+    info.appendChild(viewBtn);
+
+    var addBtn = document.createElement("button");
+    addBtn.className = "view-btn";
+    addBtn.style.marginLeft = "10px";
+
+    function updateAddButton() {
+      var inList = watchlist[data.imdbID];
+      addBtn.innerHTML = inList ? "✅ In List" : "Add to List";
     }
 
-    function renderResult(data) {
-      const container = document.createElement("div");
-      container.className = "result";
-
-      const poster = document.createElement("img");
-      poster.className = "poster";
-      poster.src = data.Poster !== "N/A" ? data.Poster : "https://via.placeholder.com/100x150?text=No+Image";
-      container.appendChild(poster);
-
-      const info = document.createElement("div");
-      info.className = "info";
-
-      const title = document.createElement("h3");
-      const isWatched = watchlist[data.imdbID]?.watched;
-      title.textContent = `${data.Title} (${data.Year})`;
-      if (isWatched) title.style.color = "limegreen";
-      info.appendChild(title);
-
-      const viewBtn = document.createElement("a");
-      viewBtn.className = "view-btn";
-      viewBtn.href = `details.html?id=${data.imdbID}`;
-      viewBtn.textContent = "View Details";
-      info.appendChild(viewBtn);
-
-      const addBtn = document.createElement("button");
-      addBtn.className = "view-btn";
-      addBtn.style.marginLeft = "10px";
-
-      function updateAddButton() {
-        const inList = watchlist[data.imdbID];
-        addBtn.innerHTML = inList ? "✅ In List" : "Add to List";
+    addBtn.onclick = function() {
+      if (watchlist[data.imdbID]) {
+        delete watchlist[data.imdbID];
+      } else {
+        watchlist[data.imdbID] = { title: data.Title + " (" + data.Year + ")", watched: false };
       }
-
-      addBtn.onclick = () => {
-        if (watchlist[data.imdbID]) {
-          delete watchlist[data.imdbID];
-        } else {
-          watchlist[data.imdbID] = { title: `${data.Title} (${data.Year})`, watched: false };
-        }
-        saveWatchlist();
-        updateWatchlistUI();
-        updateAddButton();
-      };
-
+      saveWatchlist();
+      updateWatchlistUI();
       updateAddButton();
-      info.appendChild(addBtn);
-      container.appendChild(info);
-      resultsDiv.appendChild(container);
-    }
+    };
 
-    window.markWatched = markWatched;
-    window.removeFromWatchlist = removeFromWatchlist;
-  </script>
+    updateAddButton();
+    info.appendChild(addBtn);
+    container.appendChild(info);
+    resultsDiv.appendChild(container);
+  }
+
+  window.markWatched = markWatched;
+  window.removeFromWatchlist = removeFromWatchlist;
+</script>
+
   <a href="tristan.html" id="contactBtn">Contact</a>
 </body>
 </html>
