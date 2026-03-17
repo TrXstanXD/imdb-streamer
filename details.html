@@ -106,6 +106,37 @@
   <iframe id="videoFrame" allowfullscreen></iframe>
   <div id="warning">⚠️ If popups appear, close them immediately. Use an ad blocker if possible.</div>
 </div>
+
+<script>
+/* Popup / Redirect Blocker */
+(function() {
+
+  window.open = function() {
+    console.log("Blocked popup");
+    return null;
+  };
+
+  document.addEventListener("click", function(e) {
+    var link = e.target.closest("a");
+    if (link && link.target === "_blank") {
+      e.preventDefault();
+    }
+  }, true);
+
+  const originalAssign = window.location.assign;
+  const originalReplace = window.location.replace;
+
+  window.location.assign = function(url) {
+    console.log("Blocked redirect:", url);
+  };
+
+  window.location.replace = function(url) {
+    console.log("Blocked redirect:", url);
+  };
+
+})();
+</script>
+
 <script>
   var apiKey = "656d0795";
   var urlParams = new URLSearchParams(window.location.search);
@@ -230,7 +261,6 @@
 
   loadDetails();
 </script>
-
 
 </body>
 </html>
