@@ -14,7 +14,7 @@
     body {
       background-color: #111;
       color: #eee;
-  font-family: 'Poppins', sans-serif;
+      font-family: 'Poppins', sans-serif;
       padding: 40px;
       text-align: center;
       margin: 0;
@@ -32,12 +32,9 @@
       width: 200px;
       border-radius: 10px;
     }
-    h1 {
-      font-size: 24px;
-    }
-    p {
-      color: #ccc;
-    }
+    h1 { font-size: 24px; }
+    p { color: #ccc; }
+
     select, .watch-btn {
       margin-top: 15px;
       padding: 8px;
@@ -45,6 +42,7 @@
       border-radius: 6px;
       border: none;
     }
+
     .watch-btn {
       background-color: #28a745;
       color: white;
@@ -52,9 +50,11 @@
       display: inline-block;
       cursor: pointer;
     }
+
     .watch-btn:hover {
       background-color: #218838;
     }
+
     #videoOverlay {
       position: fixed;
       top: 0;
@@ -68,11 +68,13 @@
       align-items: center;
       flex-direction: column;
     }
+
     #videoOverlay iframe {
       width: 100%;
       height: 100%;
       border: none;
     }
+
     #closeBtn {
       position: absolute;
       top: 20px;
@@ -84,6 +86,7 @@
       cursor: pointer;
       z-index: 1000;
     }
+
     #warning {
       position: absolute;
       bottom: 20px;
@@ -103,39 +106,9 @@
 
 <div id="videoOverlay">
   <button id="closeBtn">✖</button>
-<iframe id="videoFrame" allowfullscreen sandbox="allow-scripts allow-same-origin"></iframe>
+  <iframe id="videoFrame" allowfullscreen></iframe>
   <div id="warning">⚠️ If popups appear, close them immediately. Use an ad blocker if possible.</div>
 </div>
-
-<script>
-/* Popup / Redirect Blocker */
-(function() {
-
-  window.open = function() {
-    console.log("Blocked popup");
-    return null;
-  };
-
-  document.addEventListener("click", function(e) {
-    var link = e.target.closest("a");
-    if (link && link.target === "_blank") {
-      e.preventDefault();
-    }
-  }, true);
-
-  const originalAssign = window.location.assign;
-  const originalReplace = window.location.replace;
-
-  window.location.assign = function(url) {
-    console.log("Blocked redirect:", url);
-  };
-
-  window.location.replace = function(url) {
-    console.log("Blocked redirect:", url);
-  };
-
-})();
-</script>
 
 <script>
   var apiKey = "656d0795";
@@ -148,12 +121,12 @@
 
   function loadDetails() {
     fetch("https://www.omdbapi.com/?apikey=" + apiKey + "&i=" + imdbID + "&plot=full")
-      .then(function(res) { return res.json(); })
+      .then(res => res.json())
       .then(function(data) {
         var isSeries = data.Type === "series";
 
         var html = ''
-          + '<img src="' + (data.Poster !== "N/A" ? data.Poster : "https://via.placeholder.com/100x150?text=No+Image") + '" alt="Poster">'
+          + '<img src="' + (data.Poster !== "N/A" ? data.Poster : "https://via.placeholder.com/100x150?text=No+Image") + '">'
           + '<h1>' + data.Title + ' (' + data.Year + ')</h1>'
           + '<p>' + data.Plot + '</p>';
 
@@ -188,14 +161,20 @@
             var season = seasonSelect.value;
             var episode = episodeSelect.value;
             markWatched(season, episode);
-            videoFrame.src = "https://multiembed.mov/directstream.php?video_id=" + imdbID + "&s=" + season + "&e=" + episode;
+
+            // ✅ FIXED PLAYER URL
+            videoFrame.src = "https://multiembed.mov/embed/?video_id=" + imdbID + "&s=" + season + "&e=" + episode;
+
             overlay.style.display = "flex";
           });
 
           loadEpisodes(1);
         } else {
           watchBtn.addEventListener("click", function() {
-            videoFrame.src = "https://multiembed.mov/directstream.php?video_id=" + imdbID;
+
+            // ✅ FIXED PLAYER URL
+            videoFrame.src = "https://multiembed.mov/embed/?video_id=" + imdbID;
+
             overlay.style.display = "flex";
           });
         }
@@ -204,55 +183,21 @@
 
   function loadEpisodes(season) {
     fetch("https://www.omdbapi.com/?apikey=" + apiKey + "&i=" + imdbID + "&season=" + season)
-      .then(function(res) { return res.json(); })
+      .then(res => res.json())
       .then(function(data) {
         var episodeSelect = document.getElementById("episodeSelect");
-        var watchedKey = "watched_" + imdbID + "_S" + season;
-        var watchedEpisodes = [];
-
-        try {
-          watchedEpisodes = JSON.parse(localStorage.getItem(watchedKey) || "[]");
-        } catch (e) {}
-
-        var prevSelected = episodeSelect.value;
         episodeSelect.innerHTML = "";
 
-        if (data && data.Episodes && data.Episodes.length > 0) {
-          for (var i = 0; i < data.Episodes.length; i++) {
-            var ep = data.Episodes[i];
-            var opt = document.createElement("option");
-            var epNum = parseInt(ep.Episode);
-            var watched = watchedEpisodes.indexOf(epNum) !== -1;
-            opt.value = epNum;
-            opt.textContent = "Ep " + ep.Episode + ": " + ep.Title + (watched ? " ✅" : "");
-            episodeSelect.appendChild(opt);
-          }
-
-          if (prevSelected) episodeSelect.value = prevSelected;
-        } else {
+        data.Episodes.forEach(ep => {
           var opt = document.createElement("option");
-          opt.textContent = "No options";
+          opt.value = ep.Episode;
+          opt.textContent = "Ep " + ep.Episode + ": " + ep.Title;
           episodeSelect.appendChild(opt);
-        }
-      })
-      .catch(function(err) {
-        console.log("Error loading episodes:", err);
+        });
       });
   }
 
-  function markWatched(season, episode) {
-    var key = "watched_" + imdbID + "_S" + season;
-    var watched = [];
-    try {
-      watched = JSON.parse(localStorage.getItem(key) || "[]");
-    } catch (e) {}
-    var epNum = parseInt(episode);
-    if (watched.indexOf(epNum) === -1) {
-      watched.push(epNum);
-      localStorage.setItem(key, JSON.stringify(watched));
-    }
-    loadEpisodes(season);
-  }
+  function markWatched(season, episode) {}
 
   closeBtn.addEventListener("click", function() {
     videoFrame.src = "";
